@@ -6,8 +6,7 @@ class QRCodeGenerator {
   /**
    * @param {Object} options - Configuration options
    * @param {string} options.baseUrl - Base URL for all QR codes
-   * @param {string} options.schoolId - School ID (default for all codes)
-   *@param {string} options.databaseId - database ID (default for all codes)
+   * @param {string} options.orderId - School ID (default for all codes)
    * @param {Object} options.qrOptions - Options for QR code generation
    * @param {number} options.qrOptions.width - QR code width in pixels
    * @param {string} options.qrOptions.color - QR code color
@@ -15,8 +14,7 @@ class QRCodeGenerator {
    */
   constructor(options = {}) {
     this.baseUrl = options.baseUrl || 'https://example.com/student-info';
-    this.schoolId = options.schoolId;
-    this.databaseId = options.databaseId;
+    this.orderId = options.orderId;
     this.qrOptions = {
       width: options.qrOptions?.width || 300,
       color: options.qrOptions?.color || '#000000',
@@ -41,26 +39,16 @@ class QRCodeGenerator {
 
   /**
    * Build URL with parameters
-   * @param {string} studentId - Student ID (optional)
    * @returns {string} Complete URL with parameters
    */
   _buildUrl(studentId = null) {
     const url = new URL(this.baseUrl);
     
     // Always add school ID if provided
-    if (this.schoolId) {
-      url.searchParams.append('school_id', this.schoolId);
+    if (this.orderId) {
+      url.searchParams.append('order_id', this.orderId);
     }
 
-    if (this.databaseId) {
-      url.searchParams.append('token', this.databaseId);
-    }
-    
-    // Add student ID if provided
-    if (studentId) {
-      url.searchParams.append('student_id', studentId);
-    }
-    
     return url.toString();
   }
 
