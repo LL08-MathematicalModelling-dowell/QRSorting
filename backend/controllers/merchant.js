@@ -23,47 +23,88 @@ async function sendtoKafka(data) {
 
 export async function createOrder(req, res) {
     console.log("This is the body:", req.body)
-    const domainName = req.body.domainName;
     const orderId = req.body.orderId;
-    const databaseId = orderId.slice(-4);
-
-    const qrGenerator = new QRCodeGenerator({
-        baseUrl: `${domainName}/studentFeeback/`,
-        orderId
-      });
-
-    const dataUrl = await qrGenerator.createGeneralQR();
-
-    const qrResult = qrGenerator.dataUrlToBuffer(dataUrl);
-    const buffer = qrResult.buffer;
-    const contentType = qrResult.contentType;
-
-    const url = qrGenerator.getUrl();
 
     let payload = {
         orderId: req.body.orderId,
         description: req.body.description,
         location: req.body.location,
         createdAt: new Date().toISOString(),
-        qrCode : {
-          link: url,
-          image: buffer,
-          contentType: contentType
-        },
+        
         dataType: "newOrder",
     };
+
     console.log("This is the topic:",process.env.KAFKA_TOPIC)
     try {
             await sendtoKafka(payload);
-        res.set({
-        "Content-Type": contentType,
-        "Content-Disposition": `attachment; filename="order-${orderId}-qr.png"`,
-        });
-
-        res.status(201).send(buffer);
-        // res.status(200).json({ success: true, count: payload.length});
+       
+        res.status(201).json({ success: true, message: "Order created successfully" });
     } catch (err) {
         console.error("❌ Failed to send order to Kafka", err);
         res.status(500).json({ error: "Failed to order" });
+    }
+}
+
+export async function getOrderDetails(req, res) {
+    
+    try {
+        const orderId = req.body.orderId;
+        const collId = orderId.slice(-4)
+        const filters = {"orderId": orderId};
+        console.log("Filters:", filters);
+        const results = await datacube.dataRetrieval(process.env.MASTER_DATABASE_ID, collId, JSON.stringify(filters));
+        if (results.success){
+            res.status(200).json({ success: true, message: "Retrieved order details successfully", orderDetails: results.data});
+        }else {
+            console.error("❌ Failed to get order details: 404");
+            res.status(404).json({ success: false, message: "Order not found" });
+        }
+        
+    } catch (err) {
+        console.error("❌ Failed to get order details:", err);
+        res.status(500).json({ error: "Failed to get order details" });
+    }
+}
+
+// export async function getOrders(req, res) {
+    
+//     try {
+//         const orderId = req.body.orderId;
+//         const collId = orderId.slice(-4)
+//         const filters = req.body.filters;
+
+//         const results = await datacube.dataRetrieval(process.env.MASTER_DATABASE_ID, collId, filters);
+//         if (results.success){
+//             res.status(200).json({ success: true, message: "Retrieved scanner types successfully", orderDetails: results.data});
+//         }else {
+//             console.error("❌ Failed to get order details: 404");
+//             res.status(404).json({ error: "Order not found" });
+//         }
+        
+//     } catch (err) {
+//         console.error("❌ Failed to get order details:", err);
+//         res.status(500).json({ error: "Failed to get order details" });
+//     }
+// }
+
+export async function updateOrderDetails(req, res) {
+    
+    try {
+        const orderId = req.body.orderId;
+        const collId = orderId.slice(-4)
+        const filters = {"orderId": orderId};
+        const updateData = req.body.updateData;
+
+        const results = await datacube.dataUpdate(process.env.MASTER_DATABASE_ID, collId, filters, updateData);
+        if (results.success){
+            res.status(200).json({ success: true, message: "Order details updated successfully"});
+        }else {
+            console.error("❌ Failed to update order details: 404");
+            res.status(404).json({ error: "Update failed" });
+        }
+        
+    } catch (err) {
+        console.error("❌ Failed to update order details:", err);
+        res.status(500).json({ error: "Failed to update order details" });
     }
 }

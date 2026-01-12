@@ -13,7 +13,7 @@ class QRCodeGenerator {
    * @param {string} options.qrOptions.backgroundColor - Background color
    */
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || 'https://example.com/student-info';
+    this.baseUrl = options.baseUrl;
     this.orderId = options.orderId;
     this.qrOptions = {
       width: options.qrOptions?.width || 300,
