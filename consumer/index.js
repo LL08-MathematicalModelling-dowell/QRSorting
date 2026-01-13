@@ -2,7 +2,7 @@ import kafka from './kafka-client.js';
 import 'dotenv/config';
 import Datacubeservices from './datacube.services.js';
 import { v4 as uuidv4 } from 'uuid';
-import { saveOrderDetails } from './helper.js';
+import { saveOrderDetails, saveScans } from './helper.js';
 
 // Environment variables from Docker Compose
 const topic = process.env.KAFKA_TOPIC;
@@ -32,6 +32,10 @@ const run = async () => {
                     const res = await saveOrderDetails(data);
                     console.log("This is order creation block", res);
                     
+                }
+                else if (data.dataType == 'newScan') {
+                    const res = await saveScans(data);
+                    console.log("This is scan creation block", res);
                 }
 
             } catch (err) {

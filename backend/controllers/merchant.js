@@ -23,14 +23,10 @@ async function sendtoKafka(data) {
 
 export async function createOrder(req, res) {
     console.log("This is the body:", req.body)
-    const orderId = req.body.orderId;
 
     let payload = {
-        orderId: req.body.orderId,
-        description: req.body.description,
-        location: req.body.location,
-        createdAt: new Date().toISOString(),
-        
+        ...req.body,
+        localtime: new Date().toISOString(),
         dataType: "newOrder",
     };
 
