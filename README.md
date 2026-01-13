@@ -1,4 +1,4 @@
-# QR Code–Based Product Order Sorting & Tracking System
+# QR Code Based Product Order Sorting & Tracking System
 
 ## Project Overview
 
