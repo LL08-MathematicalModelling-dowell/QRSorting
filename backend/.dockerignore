@@ -1,0 +1,6 @@
+npm-debug.log
+dist
+.env
+.git
+.gitignore
+*.md
