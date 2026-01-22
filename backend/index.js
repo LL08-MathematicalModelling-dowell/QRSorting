@@ -9,6 +9,7 @@ const app = express();
 const allowedOrigins = [
     'http://backend:5000',  // For local development on your machine
     'http://localhost:8080',
+    'http://localhost:3000',
     // Add other potential development origins if needed
     'http://127.0.0.1:8080'
 ];

@@ -1,5 +1,5 @@
 # Specify the base image
-FROM node:latest
+FROM node:20-alpine
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Expose the port the app runs on
-EXPOSE 5000
+EXPOSE 3000
 
 # Start the application
 CMD ["npm", "run", "dev"]

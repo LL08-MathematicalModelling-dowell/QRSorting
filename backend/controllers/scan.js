@@ -33,14 +33,14 @@ export async function createScan(req, res) {
 export async function getScansForDate(req, res) {
     
     try {
-        const orderId = req.body.orderId;
-        const datetime = new Date(req.body.date)
+        const orderId = req.query.orderId;
+        const datetime = new Date(req.query.date)
         const collId = formatDate(datetime)
         const filters = {"orderId": orderId};
         console.log("Filters:", filters);
         const results = await datacube.dataRetrieval(process.env.SCAN_DATABASE_ID, collId, JSON.stringify(filters));
         if (results.success){
-            res.status(200).json({ success: true, message: "Retrieved scanned data successfully", orderDetails: results.data});
+            res.status(200).json({ success: true, message: "Retrieved scanned data successfully", scanDetails: results.data});
         }else {
             console.error("❌ Failed to get scanned data: 404");
             res.status(404).json({ success: false, message: "OrderId not found" });

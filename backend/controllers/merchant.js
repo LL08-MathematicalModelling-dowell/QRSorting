@@ -44,12 +44,13 @@ export async function createOrder(req, res) {
 export async function getOrderDetails(req, res) {
     
     try {
-        const orderId = req.body.orderId;
+        const orderId = req.query.orderId;
         const collId = orderId.slice(-4)
         const filters = {"orderId": orderId};
         console.log("Filters:", filters);
         const results = await datacube.dataRetrieval(process.env.MASTER_DATABASE_ID, collId, JSON.stringify(filters));
-        if (results.success){
+        console.log(results)
+        if (results.success && results.data.length > 0){
             res.status(200).json({ success: true, message: "Retrieved order details successfully", orderDetails: results.data});
         }else {
             console.error("❌ Failed to get order details: 404");

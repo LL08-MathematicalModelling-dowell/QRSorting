@@ -96,12 +96,6 @@ class Datacubeservices {
 
     async createCollection(databaseId, collections) {
         const url = `${this.baseUrl}/add_collection/`;
-    //     {
-            // "collections": [{
-            //     "name":"LatIndex",
-            // "fields":[ {"name":"latitude","type":"number"}, {"name":"longitude","type":"number"}]
-        // }]
-    //   }
         const payload = {
             database_id: databaseId,
             collections: collections
