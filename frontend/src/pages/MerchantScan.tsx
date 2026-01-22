@@ -85,7 +85,7 @@ const MerchantScan = () => {
           <div className="flex items-center gap-3 text-merchant-foreground">
             <Package className="w-6 h-6" />
             <div>
-              <h1 className="font-bold text-lg">Merchant Portal</h1>
+              <h1 className="font-bold text-lg">DoWell Smart Labelling</h1>
               <p className="text-sm opacity-90">Order Management</p>
             </div>
           </div>
@@ -106,7 +106,7 @@ const MerchantScan = () => {
               </div>
               <h2 className="text-2xl font-bold mb-2">Scan QR Code</h2>
               <p className="text-muted-foreground">
-                Scan an order QR code to get started
+                Scan QR code to get started
               </p>
             </div>
 

@@ -85,8 +85,8 @@ const DeliveryScan = () => {
           <div className="flex items-center gap-3 text-delivery-foreground">
             <Truck className="w-6 h-6" />
             <div>
-              <h1 className="font-bold text-lg">Delivery Portal</h1>
-              <p className="text-sm opacity-90">Location Update</p>
+              <h1 className="font-bold text-lg">DoWell Smart Labelling</h1>
+              <p className="text-sm opacity-90">Delivery Portal</p>
             </div>
           </div>
         </div>
@@ -106,7 +106,7 @@ const DeliveryScan = () => {
               </div>
               <h2 className="text-2xl font-bold mb-2">Scan QR Code</h2>
               <p className="text-muted-foreground">
-                Scan an order QR code to update your location
+                Scan QR code to update your location
               </p>
             </div>
 

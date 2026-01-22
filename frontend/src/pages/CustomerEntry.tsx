@@ -60,8 +60,8 @@ const CustomerEntry = () => {
           <div className="flex items-center gap-3 text-primary-foreground">
             <Package className="w-6 h-6" />
             <div>
-              <h1 className="font-bold text-lg">Track Your Order</h1>
-              <p className="text-sm opacity-90">Real-time delivery updates</p>
+              <h1 className="font-bold text-lg">DoWell Smart Labelling</h1>
+              <p className="text-sm opacity-90">Track your order status and delivery updates</p>
             </div>
           </div>
         </div>
@@ -80,7 +80,7 @@ const CustomerEntry = () => {
             </div>
             <h2 className="text-2xl font-bold mb-2">Enter Order ID</h2>
             <p className="text-muted-foreground">
-              Enter your order ID to see live tracking updates
+              Enter your order ID to see tracking updates
             </p>
           </div>
 
