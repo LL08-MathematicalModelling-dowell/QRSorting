@@ -11,7 +11,8 @@ const allowedOrigins = [
     'http://localhost:8080',
     'http://localhost:3000',
     // Add other potential development origins if needed
-    'http://127.0.0.1:8080'
+    'http://127.0.0.1:8080',
+    'http://69.169.108.183:3000'
 ];
 
 const corsOptions = {
