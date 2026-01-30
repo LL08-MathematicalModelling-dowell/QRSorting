@@ -91,7 +91,10 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
+      - frontend
       - backend
+    networks:
+      - app-network
 
   # Redis for caching (optional but recommended)
   redis:
