@@ -11,6 +11,11 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    allowedHosts: [
+      'www.dowellsmartlabelling.uxlivinglab.org',
+      'dowellsmartlabelling.uxlivinglab.org',
+      'localhost'
+    ]
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
