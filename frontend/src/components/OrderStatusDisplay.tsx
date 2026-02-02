@@ -17,7 +17,7 @@ const statusConfig = {
   },
   preparing: {
     label: 'Preparing',
-    description: 'The restaurant is preparing your order',
+    description: 'Your order is being prepared',
     icon: ChefHat,
     color: 'bg-info',
     progress: 30,
