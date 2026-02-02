@@ -1,6 +1,6 @@
 import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult } from "@/types/order";
 
-const BACKEND_URL = 'https://backend:5000/api/v1/';
+const BACKEND_URL = '/api/v1/';
 
 export const merchantOrderAPI = {
   getOrder: async (orderId: string): Promise<Order> => {
