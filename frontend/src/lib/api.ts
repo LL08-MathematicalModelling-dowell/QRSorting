@@ -56,7 +56,7 @@ export const merchantOrderAPI = {
   },
 
   createOrder: async (order:Order): Promise<OrderResult> => {
-    
+    console.log("This is the order:", order)
     const endpoint = `${BACKEND_URL}/merchant/create-order`;
 
     try {

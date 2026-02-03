@@ -26,6 +26,7 @@ export async function createOrder(req, res) {
 
     let payload = {
         ...req.body,
+        // audioFile: req.file ? req.file.buffer : null,
         localtime: new Date().toISOString(),
         dataType: "newOrder",
     };
