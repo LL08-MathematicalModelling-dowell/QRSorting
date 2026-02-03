@@ -10,6 +10,7 @@ const allowedOrigins = [
     'http://backend:5000',  // For local development on your machine
     'http://localhost:8080',
     'http://localhost:3000',
+    'https://www.dowellsmartlabelling.uxlivinglab.org',
     // Add other potential development origins if needed
     'http://127.0.0.1:8080',
     'http://69.169.108.183:3000',
