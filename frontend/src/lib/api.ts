@@ -1,11 +1,11 @@
 import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult } from "@/types/order";
 
-const BACKEND_URL = '/api/v1/';
+const BACKEND_URL = '/api/v1';
 
 export const merchantOrderAPI = {
   getOrder: async (orderId: string): Promise<Order> => {
     
-    const endpoint = `${BACKEND_URL}merchant/get-order/?orderId=${orderId}`;
+    const endpoint = `${BACKEND_URL}/merchant/get-order/?orderId=${orderId}`;
 
     try {
       console.log(`Token Params from QR scan: ${orderId}`);
@@ -57,7 +57,7 @@ export const merchantOrderAPI = {
 
   createOrder: async (order:Order): Promise<OrderResult> => {
     
-    const endpoint = `${BACKEND_URL}merchant/create-order`;
+    const endpoint = `${BACKEND_URL}/merchant/create-order`;
 
     try {
       console.log(`Token Params from QR scan: ${order.orderId}`);
@@ -89,7 +89,7 @@ export const merchantOrderAPI = {
 
   updateOrder: async (order:OrderUpdate): Promise<OrderResult> => {
     
-    const endpoint = `${BACKEND_URL}merchant/update-order`;
+    const endpoint = `${BACKEND_URL}/merchant/update-order`;
 
     try {
       console.log(`Token Params from QR scan: ${order.orderId}`);
@@ -128,7 +128,7 @@ export const merchantOrderAPI = {
 export const scanAPI = {
   insertScan: async (scan:ScanningUpdate): Promise<OrderResult> => {
     console.log(scan)
-    const endpoint = `${BACKEND_URL}scan/create-scan`;
+    const endpoint = `${BACKEND_URL}/scan/create-scan`;
 
     try {
       console.log(`Token Params from QR scan: ${scan.orderId}`);
@@ -160,7 +160,7 @@ export const scanAPI = {
 
   getScans: async (orderId: string, date: string): Promise<ScanResult> => {
     
-    const endpoint = `${BACKEND_URL}scan/get-scans/?orderId=${orderId}&date=${date}`;
+    const endpoint = `${BACKEND_URL}/scan/get-scans/?orderId=${orderId}&date=${date}`;
 
     try {
       console.log(`Fetching scans for order: ${orderId}, ${date}`);

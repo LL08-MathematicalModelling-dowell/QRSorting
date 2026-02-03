@@ -15,7 +15,15 @@ export default defineConfig(({ mode }) => ({
       'www.dowellsmartlabelling.uxlivinglab.org',
       'dowellsmartlabelling.uxlivinglab.org',
       'localhost'
-    ]
+    ],
+    // proxy for local development
+    proxy: {
+      '/api': {
+        target: 'http://backend:5000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

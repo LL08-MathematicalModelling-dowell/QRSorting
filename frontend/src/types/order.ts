@@ -48,6 +48,7 @@ export interface Order {
   deliveryLocation?: GeoLocation;
   estimatedDelivery?: string;
   notes?: string;
+  audioNoteUrl?: string;
 }
 
 export interface OrderResult {
