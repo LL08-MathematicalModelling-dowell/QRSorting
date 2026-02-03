@@ -24,7 +24,7 @@ const GarmentItemCard = ({ item }: { item: OrderItem }) => {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">
-            ${(item.price * item.quantity).toFixed(2)}
+            ₹{(item.price * item.quantity).toFixed(2)}
           </span>
           {expanded ? (
             <ChevronUp className="w-4 h-4 text-muted-foreground" />
