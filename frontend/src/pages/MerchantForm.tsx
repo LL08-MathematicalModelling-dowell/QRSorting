@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
+import { AudioRecorder } from '@/components/AudioRecorder';
 // import { getOrder, updateOrder, createOrder } from '@/lib/mockData';
 import { OrderStatus, OrderItem, GarmentSpecification, Order, OrderUpdate } from '@/types/order';
 import { toast } from '@/hooks/use-toast';
@@ -42,6 +43,7 @@ const MerchantForm = () => {
     status: 'pending' as OrderStatus,
     estimatedDelivery: '',
     notes: '',
+    audioNoteUrl: '',
     items: [{ 
       id: '1', 
       garmentType: '', 
@@ -50,6 +52,8 @@ const MerchantForm = () => {
       specifications: [{ id: '1', fieldName: '', value: '' }] 
     }] as OrderItem[],
   });
+
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -73,6 +77,7 @@ const MerchantForm = () => {
           status: order.status,
           estimatedDelivery: order.estimatedDelivery || '',
           notes: order.notes || '',
+          audioNoteUrl: order.audioNoteUrl || '',
           items: order.items,
         });
         setIsNewOrder(false);
@@ -125,6 +130,7 @@ const MerchantForm = () => {
           // deliveryLocation: { lat: 40.7282, lng: -73.9942, timestamp: 0 },
           estimatedDelivery: formData.estimatedDelivery || undefined,
           notes: formData.notes || undefined,
+          audioNoteUrl: formData.audioNoteUrl || undefined,
         };
 
         const orderResponse = await merchantOrderAPI.createOrder(newOrder);
@@ -161,6 +167,7 @@ const MerchantForm = () => {
             title: 'Order Updated',
             description: 'Order details have been saved successfully.',
           });
+          navigate('/order/merchant');
         }
       }
     } catch (error) {
@@ -582,10 +589,17 @@ const MerchantForm = () => {
                   placeholder="Any special instructions..."
                   rows={3}
                 />
+                <div>
+                  <Label className="mb-2 block">Voice Note (Optional)</Label>
+                  <AudioRecorder
+                    existingAudioBlob={audioBlob || undefined}
+                    onAudioRecorded={setAudioBlob}
+                  />
+                </div>
               </div>
             </div>
           </motion.div>
-
+          
           {/* QR Code (for existing orders) */}
           {!isNewOrder && orderId && (
             <motion.div
