@@ -472,11 +472,10 @@ const MerchantForm = () => {
                           />
                         </div>
                         <div>
-                          <Label>Price ($)</Label>
+                          <Label>Price (₹)</Label>
                           <Input
                             type="number"
-                            step="0.01"
-                            min="0"
+                            min="1"
                             value={item.price}
                             onChange={(e) => updateItem(itemIndex, 'price', parseFloat(e.target.value) || 0)}
                           />
@@ -593,7 +592,7 @@ const MerchantForm = () => {
                   <Label className="mb-2 block">Voice Note (Optional)</Label>
                   <AudioRecorder
                     existingAudioBlob={audioBlob || undefined}
-                    onAudioRecorded={setAudioBlob}
+                    onAudioRecorded={(blob) => setAudioBlob(blob)}
                   />
                 </div>
               </div>
