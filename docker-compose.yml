@@ -67,7 +67,7 @@ services:
       - redis
     networks:
       - app-network
-    restart: unless-stopped
+    restart: always
 
   # Frontend Service
   frontend:

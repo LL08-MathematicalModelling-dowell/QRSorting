@@ -9,10 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { AudioRecorder } from '@/components/AudioRecorder';
+import { ImageUploader } from '@/components/ImageUploader';
 // import { getOrder, updateOrder, createOrder } from '@/lib/mockData';
 import { OrderStatus, OrderItem, GarmentSpecification, Order, OrderUpdate } from '@/types/order';
 import { toast } from '@/hooks/use-toast';
 import { merchantOrderAPI } from '@/lib/api';
+import { base64ToBlob } from '@/lib/utils';
 
 const statusOptions: { value: OrderStatus; label: string }[] = [
   { value: 'pending', label: 'Pending' },
@@ -43,7 +45,6 @@ const MerchantForm = () => {
     status: 'pending' as OrderStatus,
     estimatedDelivery: '',
     notes: '',
-    audioNoteUrl: '',
     items: [{ 
       id: '1', 
       garmentType: '', 
@@ -51,9 +52,12 @@ const MerchantForm = () => {
       price: 0, 
       specifications: [{ id: '1', fieldName: '', value: '' }] 
     }] as OrderItem[],
+    audioBlob: undefined,
+    imageBlob: undefined
   });
 
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -69,6 +73,20 @@ const MerchantForm = () => {
     if (orderId) {
       const order = await merchantOrderAPI.getOrder(orderId);
       if (order.success) {
+        console.log("AUDIO BUFFER:", order.audioBuffer, order.audioType);
+        console.log("IMAGE BUFFER:", order.imageBuffer, order.imageType);
+        if (order.audioBuffer && order.audioType) {
+          const audio = base64ToBlob(order.audioBuffer, order.audioType);
+          console.log("AUDIO BLOB:", audio, audio.size);
+          setAudioBlob(audio);
+        }
+
+        if (order.imageBuffer && order.imageType) {
+          const image = base64ToBlob(order.imageBuffer, order.imageType);
+          console.log("IMAGE BLOB:", image, image.size);
+          setImageBlob(image);
+        }
+
         setFormData({
           merchantName: order.merchantName,
           customerName: order.customerName,
@@ -77,8 +95,9 @@ const MerchantForm = () => {
           status: order.status,
           estimatedDelivery: order.estimatedDelivery || '',
           notes: order.notes || '',
-          audioNoteUrl: order.audioNoteUrl || '',
           items: order.items,
+          audioBlob: undefined,
+          imageBlob: undefined
         });
         setIsNewOrder(false);
         // Expand all items when editing
@@ -105,9 +124,6 @@ const MerchantForm = () => {
     e.preventDefault();
     setSaving(true);
 
-    // Simulate API delay
-    // await new Promise(resolve => setTimeout(resolve, 800));
-
     try {
       // Filter out empty items and specifications
       const cleanedItems = formData.items
@@ -130,7 +146,8 @@ const MerchantForm = () => {
           // deliveryLocation: { lat: 40.7282, lng: -73.9942, timestamp: 0 },
           estimatedDelivery: formData.estimatedDelivery || undefined,
           notes: formData.notes || undefined,
-          audioNoteUrl: formData.audioNoteUrl || undefined,
+          audioBlob: audioBlob || undefined,
+          imageBlob: imageBlob || undefined,
         };
 
         const orderResponse = await merchantOrderAPI.createOrder(newOrder);
@@ -589,12 +606,20 @@ const MerchantForm = () => {
                   rows={3}
                 />
                 <div>
+                  <Label className="mb-2 block">Garment Sample Image (Optional)</Label>
+                  <ImageUploader
+                    existingImageBlob={imageBlob || undefined}
+                    onImageSelected={setImageBlob}
+                  />
+                </div>
+                <div>
                   <Label className="mb-2 block">Voice Note (Optional)</Label>
                   <AudioRecorder
                     existingAudioBlob={audioBlob || undefined}
-                    onAudioRecorded={(blob) => setAudioBlob(blob)}
+                    onAudioRecorded={setAudioBlob}
                   />
                 </div>
+                
               </div>
             </div>
           </motion.div>

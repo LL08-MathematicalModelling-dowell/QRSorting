@@ -45,7 +45,8 @@ export async function createOrder(req, res) {
 export async function getOrderDetails(req, res) {
     
     try {
-        const orderId = req.query.orderId;
+        console.log("This is the query:", req.query)
+        const orderId = req.query.orderId.toLowerCase();
         const collId = orderId.slice(-4)
         const filters = {"orderId": orderId};
         console.log("Filters:", filters);
@@ -88,7 +89,7 @@ export async function getOrderDetails(req, res) {
 export async function updateOrderDetails(req, res) {
     
     try {
-        const orderId = req.body.orderId;
+        const orderId = req.body.orderId.toLowerCase();
         const collId = orderId.slice(-4)
         const filters = {"orderId": orderId};
         const updateData = req.body.updateData;
