@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { Store, Ruler, MapPin, Phone, User, FileText, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { Store, Ruler, MapPin, Phone, User, FileText, ChevronDown, ChevronUp, ImageIcon, Mic } from 'lucide-react';
+import { useEffect,useState } from 'react';
 import { Order, OrderItem } from '@/types/order';
+import { base64ToUrl } from '@/lib/utils';
 
 interface OrderDetailsCardProps {
   order: Order;
@@ -50,6 +51,25 @@ const GarmentItemCard = ({ item }: { item: OrderItem }) => {
 
 export const OrderDetailsCard = ({ order }: OrderDetailsCardProps) => {
   const totalAmount = order.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0;
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (order.imageBuffer && order.imageType) {
+      const url = base64ToUrl(order.imageBuffer, order.imageType);
+      setImageUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [order.imageBuffer, order.imageType]);
+
+  useEffect(() => {
+    if (order.audioBuffer && order.audioType) {
+      const url = base64ToUrl(order.audioBuffer, order.audioType);
+      setAudioUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [order.audioBuffer, order.audioType]);
 
   return (
     <motion.div
@@ -123,6 +143,33 @@ export const OrderDetailsCard = ({ order }: OrderDetailsCardProps) => {
             </div>
           </div>
         )}
+
+        {/* Garment Image */}
+        {imageUrl && (
+          <div className="flex items-start gap-3">
+            <ImageIcon className="w-4 h-4 text-muted-foreground mt-1" />
+            <div className="w-full">
+              <p className="text-xs text-muted-foreground mb-1">Garment Image</p>
+              <img
+                src={imageUrl}
+                alt="Garment sample"
+                className="rounded-lg border max-h-48 object-contain"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Voice Note */}
+        {audioUrl && (
+          <div className="flex items-start gap-3">
+            <Mic className="w-4 h-4 text-muted-foreground mt-1" />
+            <div className="w-full">
+              <p className="text-xs text-muted-foreground mb-1">Voice Note</p>
+              <audio controls src={audioUrl} className="w-full" />
+            </div>
+          </div>
+        )}
+        
       </div>
     </motion.div>
   );

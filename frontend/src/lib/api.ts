@@ -4,7 +4,7 @@ const BACKEND_URL = '/api/v1';
 
 export const merchantOrderAPI = {
   getOrder: async (orderId: string): Promise<Order> => {
-    
+    console.log(`Fetching order: ${orderId}`);
     const endpoint = `${BACKEND_URL}/merchant/get-order/?orderId=${orderId}`;
 
     try {
@@ -45,7 +45,11 @@ export const merchantOrderAPI = {
         createdAt: orderDetails.localtime,
         deliveryLocation: orderDetails.customerAddress,
         estimatedDelivery: orderDetails.estimatedDelivery,
-        notes: orderDetails.notes
+        notes: orderDetails.notes,
+        audioBuffer: orderDetails.audioBuffer,
+        imageBuffer: orderDetails.imageBuffer,
+        audioType: orderDetails.audioType,
+        imageType: orderDetails.imageType
       };
       return result;
 
@@ -59,15 +63,54 @@ export const merchantOrderAPI = {
     console.log("This is the order:", order)
     const endpoint = `${BACKEND_URL}/merchant/create-order`;
 
+    // Helper function to convert Blob to base64 buffer string
+    const blobToBase64 = (blob: Blob): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+          const base64Data = base64String.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    };
+
     try {
       console.log(`Token Params from QR scan: ${order.orderId}`);
-     
+      
+      // Convert blobs to base64 buffers if present
+      let imageBuffer: string | null = null;
+      let audioBuffer: string | null = null;
+      let imageURL: string | null = null;
+      let audioURL: string | null = null;
+      
+      if (order.imageBlob) {
+        imageBuffer = await blobToBase64(order.imageBlob);
+        imageURL = URL.createObjectURL(order.imageBlob);
+      }
+      
+      if (order.audioBlob) {
+        audioBuffer = await blobToBase64(order.audioBlob);
+        audioURL = URL.createObjectURL(order.audioBlob);
+      }
+      
+      // Build order payload with buffer data
+      const orderPayload = {
+        ...order,
+        imageBuffer: imageBuffer,
+        imageType: order.imageBlob?.type || null,
+        audioBuffer: audioBuffer,
+        audioType: order.audioBlob?.type || null,
+      };
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(order),
+        body: JSON.stringify(orderPayload),
       });
       
     if (!response.ok){
@@ -96,7 +139,8 @@ export const merchantOrderAPI = {
       const payload = {
         "orderId": order.orderId,
         "updateData": {
-          "status": order.status
+          "status": order.status,
+          "estimatedDelivery": order.estimatedDelivery
         }
       }
       const response = await fetch(endpoint, {

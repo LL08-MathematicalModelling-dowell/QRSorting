@@ -48,7 +48,12 @@ export interface Order {
   deliveryLocation?: GeoLocation;
   estimatedDelivery?: string;
   notes?: string;
-  audioNoteUrl?: string;
+  audioBlob?: Blob;
+  imageBlob?: Blob;
+  audioBuffer?: string; // base64
+  imageBuffer?: string; // base64
+  audioType?: string;
+  imageType?: string;
 }
 
 export interface OrderResult {
@@ -79,7 +84,8 @@ export interface ScanResult {
 
 export interface OrderUpdate {
   orderId: string;
-  status: string
+  status: string,
+  estimatedDelivery?: string
 }
 
 export type UserRole = 'merchant' | 'delivery' | 'customer';

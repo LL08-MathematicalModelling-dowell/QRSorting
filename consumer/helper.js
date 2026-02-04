@@ -6,6 +6,8 @@ const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
 const saveOrderDetails = async (data) => {
     
     delete data.dataType
+    data.orderId = (data.orderId).toLowerCase();
+    console.log("ORDER ID:", data.orderId);
 
     const dbID = process.env.MASTER_DATABASE_ID
     const orderId = data.orderId
