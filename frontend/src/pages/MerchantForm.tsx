@@ -624,14 +624,14 @@ const MerchantForm = () => {
             </div>
           </motion.div>
           
-          {/* QR Code (for existing orders) */}
+          {/* QR Codes (for existing orders) */}
           {!isNewOrder && orderId && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <QRCodeDisplay orderId={orderId} />
+              <QRCodeDisplay orderId={orderId} showDeliveryQR={true} />
             </motion.div>
           )}
 
