@@ -3,6 +3,42 @@ import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult } from "@/t
 const BACKEND_URL = '/api/v1';
 
 export const merchantOrderAPI = {
+  decryptOrderId: async (encryptedToken: string): Promise<{ success: boolean; orderId?: string; message?: string }> => {
+     const endpoint = `${BACKEND_URL}/merchant/decrypt-order-id`;
+ 
+     try {
+       console.log('Decrypting token:', encryptedToken);
+       
+       const response = await fetch(endpoint, {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({ token: encryptedToken }),
+       });
+       
+       if (!response.ok) {
+         const errorDetail = await response.text();
+         return {
+           success: false,
+           message: `Decryption failed: ${errorDetail}`,
+         };
+       }
+       
+       const res = await response.json();
+       return {
+         success: res.success,
+         orderId: res.orderId,
+         message: res.message,
+       };
+     } catch (error) {
+       console.error('API Call Error in merchantOrderAPI.decryptOrderId:', error);
+       return {
+         success: false,
+         message: 'Network error during decryption',
+       };
+     }
+   },
   getOrder: async (orderId: string): Promise<Order> => {
     console.log(`Fetching order: ${orderId}`);
     const endpoint = `${BACKEND_URL}/merchant/get-order/?orderId=${orderId}`;

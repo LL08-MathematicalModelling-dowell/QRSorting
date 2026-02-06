@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import MerchantLanding from "./pages/MerchantLanding";
+import MerchantUniqueScan from "./pages/MerchantUniqueScan";
 import MerchantScan from "./pages/MerchantScan";
 import MerchantForm from "./pages/MerchantForm";
 import CustomerEntry from "./pages/CustomerEntry";
@@ -25,7 +27,9 @@ const App = () => (
           <Route path="/order/:orderId" element={<CustomerTracking />} />
 
           {/* Merchant routes */}
-          <Route path="/order/merchant" element={<MerchantScan />} />
+          <Route path="/order/merchant" element={<MerchantLanding />} />
+          <Route path="/order/merchant/common" element={<MerchantScan />} />
+          <Route path="/order/merchant/unique" element={<MerchantUniqueScan />} />
           <Route path="/order/merchant/update/:orderId" element={<MerchantForm />} />
           <Route path="/order/merchant/create/:orderId" element={<MerchantForm />} />
           

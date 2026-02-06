@@ -4,23 +4,24 @@ import { Copy, Check, Download } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-interface QRCodeDisplayProps {
+interface QRCodeCardProps {
+  title: string;
+  url: string;
   orderId: string;
   size?: number;
 }
 
-export const QRCodeDisplay = ({ orderId, size = 200 }: QRCodeDisplayProps) => {
+const QRCodeCard = ({ title, url, orderId, size = 160 }: QRCodeCardProps) => {
   const [copied, setCopied] = useState(false);
-  const trackingUrl = `${window.location.origin}/order/${orderId}`;
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(trackingUrl);
+    await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = () => {
-    const svg = document.getElementById('qr-code-svg');
+    const svg = document.getElementById(`qr-${title.toLowerCase().replace(/\s+/g, '-')}`);
     if (!svg) return;
 
     const svgData = new XMLSerializer().serializeToString(svg);
@@ -37,7 +38,7 @@ export const QRCodeDisplay = ({ orderId, size = 200 }: QRCodeDisplayProps) => {
         ctx.drawImage(img, 20, 20);
         
         const link = document.createElement('a');
-        link.download = `qr-${orderId}.png`;
+        link.download = `${title.toLowerCase().replace(/\s+/g, '-')}-${orderId}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       }
@@ -47,17 +48,13 @@ export const QRCodeDisplay = ({ orderId, size = 200 }: QRCodeDisplayProps) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="glass-card rounded-2xl p-6 text-center"
-    >
-      <h3 className="font-semibold mb-4">Order QR Code</h3>
+    <div className="flex flex-col items-center">
+      <h4 className="font-medium text-sm mb-3">{title}</h4>
       
-      <div className="inline-flex p-4 bg-card rounded-xl shadow-soft mb-4">
+      <div className="inline-flex p-3 bg-card rounded-xl shadow-soft mb-3">
         <QRCodeSVG
-          id="qr-code-svg"
-          value={trackingUrl}
+          id={`qr-${title.toLowerCase().replace(/\s+/g, '-')}`}
+          value={url}
           size={size}
           level="H"
           includeMargin={false}
@@ -66,29 +63,68 @@ export const QRCodeDisplay = ({ orderId, size = 200 }: QRCodeDisplayProps) => {
         />
       </div>
 
-      <p className="text-sm text-muted-foreground mb-4 font-mono bg-muted rounded-lg px-3 py-2 break-all">
-        {trackingUrl}
+      <p className="text-xs text-muted-foreground mb-3 font-mono bg-muted rounded-lg px-2 py-1.5 break-all max-w-full">
+        {url}
       </p>
 
-      <div className="flex gap-2 justify-center">
+      <div className="flex gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={handleCopy}
-          className="gap-2"
+          className="gap-1.5 text-xs h-8"
         >
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          {copied ? 'Copied!' : 'Copy Link'}
+          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          {copied ? 'Copied!' : 'Copy'}
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={handleDownload}
-          className="gap-2"
+          className="gap-1.5 text-xs h-8"
         >
-          <Download className="w-4 h-4" />
+          <Download className="w-3 h-3" />
           Download
         </Button>
+      </div>
+    </div>
+  );
+};
+
+interface QRCodeDisplayProps {
+  orderId: string;
+  size?: number;
+  showDeliveryQR?: boolean;
+}
+
+export const QRCodeDisplay = ({ orderId, size = 160, showDeliveryQR = false }: QRCodeDisplayProps) => {
+  const orderTrackingUrl = `${window.location.origin}/order/${orderId}`;
+  const deliveryUrl = `${window.location.origin}/order/delivery/${orderId}`;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="glass-card rounded-2xl p-6 text-center"
+    >
+      <h3 className="font-semibold mb-6">QR Codes</h3>
+      
+      <div className={`grid gap-6 ${showDeliveryQR ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+        <QRCodeCard 
+          title="Order Tracking" 
+          url={orderTrackingUrl} 
+          orderId={orderId}
+          size={size}
+        />
+        
+        {showDeliveryQR && (
+          <QRCodeCard 
+            title="Delivery Update" 
+            url={deliveryUrl} 
+            orderId={orderId}
+            size={size}
+          />
+        )}
       </div>
     </motion.div>
   );

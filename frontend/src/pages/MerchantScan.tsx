@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Package, QrCode, Hash, ArrowRight, Scan } from 'lucide-react';
+import { QrCode, Hash, ArrowRight, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -74,39 +74,17 @@ const MerchantScan = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-40 gradient-merchant"
-      >
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3 text-merchant-foreground">
-            <Package className="w-6 h-6" />
-            <div>
-              <h1 className="font-bold text-lg">DoWell Smart Labelling</h1>
-              <p className="text-sm opacity-90">Order Management</p>
-            </div>
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Main Content */}
-      <main className="container max-w-xl mx-auto px-4 py-8">
+    <div className="min-h-[100svh] bg-background">
+      <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col justify-center gap-4 px-4 py-6">
         {step === 'scan' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-merchant/10 mb-4">
-                <Scan className="w-8 h-8 text-merchant" />
+          <>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-merchant/10">
+                <Scan className="h-6 w-6 text-merchant" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Scan QR Code</h2>
-              <p className="text-muted-foreground">
-                Scan QR code to get started
+              <h2 className="mt-2 text-lg font-semibold">Scan QR Code</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Scan an order QR code to get started
               </p>
             </div>
 
@@ -138,21 +116,18 @@ const MerchantScan = () => {
               <Hash className="w-4 h-4 mr-2" />
               Enter Order ID Manually
             </Button>
-          </motion.div>
+
+            </>
         )}
 
         {step === 'orderId' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-merchant/10 mb-4">
-                <Hash className="w-8 h-8 text-merchant" />
+          <>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-merchant/10">
+                <Hash className="h-6 w-6 text-merchant" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Enter Order ID</h2>
-              <p className="text-muted-foreground">
+              <h2 className="mt-2 text-lg font-semibold">Enter Order ID</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Enter the order ID to create or update an order
               </p>
             </div>
@@ -201,10 +176,11 @@ const MerchantScan = () => {
               <QrCode className="w-4 h-4 mr-2" />
               Back to Scanner
             </Button>
-          </motion.div>
+
+            </>
         )}
       </main>
-
+      
       {/* QR Scanner Modal */}
       <QRScanner
         isOpen={scannerOpen}

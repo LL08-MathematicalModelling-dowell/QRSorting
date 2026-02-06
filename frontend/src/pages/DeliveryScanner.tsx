@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, CheckCircle, AlertCircle, Loader2, ArrowLeft, Navigation } from 'lucide-react';
+import { MapPin, CheckCircle, AlertCircle, Loader2, ArrowLeft, Navigation, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -14,8 +14,9 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { merchantOrderAPI, scanAPI } from '@/lib/api';
 import { ScanningUpdate, OrderStatus } from '@/types/order';
+import { LocationPreviewMap } from '@/components/LocationPreviewMap';
 
-type LocationState = 'idle' | 'selecting_status' | 'requesting' | 'success' | 'error' | 'denied';
+type LocationState = 'idle' | 'selecting_status' | 'requesting' | 'previewing' | 'saving' | 'success' | 'error' | 'denied';
 
 const statusOptions: { value: OrderStatus; label: string }[] = [
   { value: 'picked_up', label: 'Picked Up' },
@@ -62,7 +63,7 @@ const DeliveryScanner = () => {
     checkOrder();
   }, [orderId]);
 
-  const captureLocation = useCallback(async () => {
+  const captureLocation = useCallback(() => {
     if (!orderId) {
       setLocationState('error');
       setErrorMessage('No order ID provided');
@@ -78,36 +79,10 @@ const DeliveryScanner = () => {
     }
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const { latitude, longitude } = position.coords;
         setCoordinates({ lat: latitude, lng: longitude });
-        
-        const scan: ScanningUpdate = {
-          orderId: orderId,
-          location: {
-            latitude: latitude,
-            longitude: longitude
-          },
-          status: selectedStatus,
-          scannedAt: new Date().toISOString()
-        }
-        const scanResult = await scanAPI.insertScan(scan);
-        console.log(scanResult);
-        
-        if (scanResult.success) {
-            setLocationState('success');
-            toast({
-            title: 'Location Updated',
-            description: `Successfully captured location for order #${orderId} with status: ${selectedStatus}`,
-          });
-        } else {
-          toast({
-            title: 'Location Update Failed',
-            description: `Failed to capture location for order #${orderId}. Please try again.`,
-            variant: 'destructive',
-          });
-        }
-        
+        setLocationState('previewing');  
       },
       (error) => {
         switch (error.code) {
@@ -134,14 +109,53 @@ const DeliveryScanner = () => {
         maximumAge: 0,
       }
     );
-  }, [orderId, selectedStatus]);
+  }, [orderId]);
 
+  const saveLocation = useCallback(async () => {
+    if (!orderId || !coordinates) return;
+
+    setLocationState('saving');
+
+    const scan: ScanningUpdate = {
+      orderId: orderId,
+      location: {
+        latitude: coordinates.lat,
+        longitude: coordinates.lng
+      },
+      status: selectedStatus,
+      scannedAt: new Date().toISOString()
+    };
+
+    const scanResult = await scanAPI.insertScan(scan);
+    console.log(scanResult);
+
+    if (scanResult.success) {
+      setLocationState('success');
+      toast({
+        title: 'Location Updated',
+        description: `Successfully captured location for order #${orderId} with status: ${selectedStatus}`,
+      });
+    } else {
+      setLocationState('previewing');
+      toast({
+        title: 'Location Update Failed',
+        description: `Failed to save location for order #${orderId}. Please try again.`,
+        variant: 'destructive',
+      });
+    }
+  }, [orderId, coordinates, selectedStatus]);
   const handleRetry = () => {
     setLocationState('selecting_status');
     setErrorMessage('');
+    setCoordinates(null);
   };
 
-  const handleCaptureWithStatus = () => {
+  const handleCaptureLocation = () => {
+    captureLocation();
+  };
+
+  const handleRecapture = () => {
+    setCoordinates(null);
     captureLocation();
   };
 
@@ -208,11 +222,11 @@ const DeliveryScanner = () => {
               </div>
               
               <Button 
-                onClick={handleCaptureWithStatus} 
+                onClick={handleCaptureLocation} 
                 className="w-full gradient-delivery text-delivery-foreground"
               >
                 <Navigation className="w-4 h-4 mr-2" />
-                Capture Location & Update Status
+                Capture Location
               </Button>
             </div>
             
@@ -239,6 +253,75 @@ const DeliveryScanner = () => {
             </p>
             <p className="text-muted-foreground">
               Please wait while we get your current location...
+            </p>
+          </motion.div>
+        );
+
+        case 'previewing':
+        return (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center space-y-5"
+          >
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Confirm Your Location</h2>
+              <p className="text-muted-foreground">
+                Status: <span className="font-semibold">{getStatusLabel(selectedStatus)}</span>
+              </p>
+            </div>
+            
+            {coordinates && (
+              <>
+                <LocationPreviewMap 
+                  coordinates={coordinates} 
+                  className="w-full"
+                />
+                
+                <div className="bg-muted rounded-lg p-3 inline-block">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Navigation className="w-4 h-4 text-delivery" />
+                    <span className="font-mono">
+                      {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="flex flex-col gap-3 max-w-xs mx-auto">
+              <Button 
+                onClick={saveLocation} 
+                className="w-full gradient-delivery text-delivery-foreground"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Confirm & Save Location
+              </Button>
+              <Button variant="outline" onClick={handleRecapture}>
+                <MapPin className="w-4 h-4 mr-2" />
+                Recapture Location
+              </Button>
+              <Button variant="ghost" onClick={() => navigate('/order/delivery')}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
+          </motion.div>
+        );
+
+      case 'saving':
+        return (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <div className="w-24 h-24 gradient-delivery rounded-full flex items-center justify-center mx-auto mb-6 shadow-soft-lg">
+              <Loader2 className="w-12 h-12 text-delivery-foreground animate-spin" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Saving Location</h2>
+            <p className="text-muted-foreground">
+              Please wait while we save your location update...
             </p>
           </motion.div>
         );
