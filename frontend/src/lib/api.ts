@@ -1,7 +1,76 @@
 import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult } from "@/types/order";
 
 const BACKEND_URL = '/api/v1';
+export const adminAPI = {
+    verifyMerchant: async (phoneNumber: string): Promise<{ success: boolean; message?: string, merchantDetails?: any }> => {
+    const endpoint = `${BACKEND_URL}/admin/verify/?phoneNumber=${phoneNumber}`;
 
+    try {
+      console.log('Verifying merchant phone:', phoneNumber);
+      
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        const errorDetail = await response.text();
+        return {
+          success: false,
+          message: `Verification failed: ${errorDetail}`,
+        };
+      }
+      
+      const res = await response.json();
+      console.log("This is the response:",  res);
+      return res;
+    } catch (error) {
+      console.error('API Call Error in adminAPI.verifyMerchant:', error);
+      return {
+        success: false,
+        message: 'Network error during verification',
+      };
+    }
+  },
+
+  registerMerchant: async (data: { businessName: string; phoneNumber: string; address: string }): Promise<{ success: boolean; message?: string }> => {
+    const endpoint = `${BACKEND_URL}/admin/register`;
+
+    try {
+      console.log('Registering merchant:', data.businessName);
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorDetail = await response.text();
+        return {
+          success: false,
+          message: `Registration failed: ${errorDetail}`,
+        };
+      }
+      
+      const res = await response.json();
+      return {
+        success: res.success,
+        message: res.message,
+      };
+    } catch (error) {
+      console.error('API Call Error in adminAPI.registerMerchant:', error);
+      return {
+        success: false,
+        message: 'Network error during registration',
+      };
+    }
+  },
+}
 export const merchantOrderAPI = {
   decryptOrderId: async (encryptedToken: string): Promise<{ success: boolean; orderId?: string; message?: string }> => {
      const endpoint = `${BACKEND_URL}/merchant/decrypt-order-id`;

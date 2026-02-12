@@ -7,6 +7,7 @@ import config from './config/index.js';
 const app = express();
 
 const allowedOrigins = [
+    'http://localhost',
     'http://backend:5000',  // For local development on your machine
     'http://localhost:8080',
     'http://localhost:3000',

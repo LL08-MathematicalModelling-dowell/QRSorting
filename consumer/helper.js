@@ -49,4 +49,20 @@ const saveScans = async (data) => {
     }
 }
 
-export { saveOrderDetails, saveScans };
+const saveMerchantDetails = async (data) => {
+    
+    delete data.dataType
+
+    const dbID = process.env.MASTER_DATABASE_ID
+    
+    const response = await datacube.dataInsertion(process.env.MASTER_DATABASE_ID, process.env.MERCHANT_COLL, data);
+    if (response.success) {
+        console.log('Merchant Details inserted successfully in datacube:', response);
+        return response 
+    } else {
+        console.error('Error inserting data:', response.error);
+        return response
+    }
+}
+
+export { saveOrderDetails, saveScans, saveMerchantDetails };

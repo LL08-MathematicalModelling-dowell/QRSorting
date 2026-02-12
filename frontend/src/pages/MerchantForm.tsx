@@ -88,7 +88,7 @@ const MerchantForm = () => {
         }
 
         setFormData({
-          merchantName: order.merchantName,
+          merchantName: sessionStorage.getItem("businessName"),
           customerName: order.customerName,
           customerPhone: order.customerPhone,
           customerAddress: order.customerAddress,
