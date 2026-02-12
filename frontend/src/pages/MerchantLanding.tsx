@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Package, FileText, Mic, QrCode, Fingerprint, ArrowRight } from 'lucide-react';
+
+import { FileText, Mic, QrCode, Fingerprint, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,23 +30,7 @@ const MerchantLanding = () => {
 
   return (
     <div className="min-h-[100svh] bg-background">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-40 gradient-merchant"
-      >
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3 text-merchant-foreground">
-            <Package className="w-6 h-6" />
-            <div>
-              <h1 className="font-bold text-lg">DoWell Smart Labelling</h1>
-              <p className="text-sm opacity-90">Order Management</p>
-            </div>
-          </div>
-        </div>
-      </motion.header>
-
+      
       {/* Main Content */}
       <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col gap-4 px-4 py-6">
         <div className="text-center">
