@@ -33,6 +33,8 @@ const MerchantForm = () => {
   const [saving, setSaving] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set([0]));
   const scan_id = sessionStorage.getItem('scan_id');
+
+  console.log("Scan ID:", scan_id);
  
   // Determine if this is a create or update based on route
   const isCreateRoute = location.pathname.includes('/order/merchant/create/');
@@ -193,7 +195,7 @@ const MerchantForm = () => {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to save order. Please try again.',
+        description: `Failed to save order. Please try again: ${error}`,
         variant: 'destructive',
       });
     } finally {
