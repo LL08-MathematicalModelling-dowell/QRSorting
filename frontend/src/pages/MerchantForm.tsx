@@ -32,9 +32,9 @@ const MerchantForm = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set([0]));
-  const scan_id = sessionStorage.getItem('scan_id');
+  // const scan_id = sessionStorage.getItem('scan_id');
 
-  console.log("Scan ID:", scan_id);
+  // console.log("Scan ID:", scan_id);
  
   // Determine if this is a create or update based on route
   const isCreateRoute = location.pathname.includes('/order/merchant/create/');
@@ -151,7 +151,7 @@ const MerchantForm = () => {
           notes: formData.notes || undefined,
           audioBlob: audioBlob || undefined,
           imageBlob: imageBlob || undefined,
-          ...(scan_id && { scanId: scan_id })
+          // ...(scan_id && { scanId: scan_id })
         };
 
         const orderResponse = await merchantOrderAPI.createOrder(newOrder);
@@ -175,7 +175,7 @@ const MerchantForm = () => {
         const updatedOrder: OrderUpdate = {
           orderId: orderId,
           status: formData.status,
-          ...(scan_id && { scanId: scan_id })
+          // ...(scan_id && { scanId: scan_id })
         }
         const updateResponse = await merchantOrderAPI.updateOrder(updatedOrder);
         if (!updateResponse.success) {
@@ -195,7 +195,7 @@ const MerchantForm = () => {
     } catch (error) {
       toast({
         title: 'Error',
-        description: `Failed to save order. Please try again: ${error}`,
+        description: 'Failed to save order. Please try again',
         variant: 'destructive',
       });
     } finally {

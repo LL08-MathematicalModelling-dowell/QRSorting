@@ -42,7 +42,7 @@ const MerchantUniqueScan = () => {
         } else {
           // Check if order exists
           // sessionStorage.setItem('qr_id', result.decryptedToken.qr_id);
-          sessionStorage.setItem('scan_id', result.decryptedToken.scan_id);
+          // sessionStorage.setItem('scan_id', result.decryptedToken.scan_id);
 
           const existingOrder = await merchantOrderAPI.getOrder(result.decryptedToken.qr_id);
         
