@@ -32,3 +32,5 @@ export const base64ToUrl = (base64: string, mimeType: string): string => {
   const blob = new Blob([arr], { type: mimeType });
   return URL.createObjectURL(blob);
 };
+
+

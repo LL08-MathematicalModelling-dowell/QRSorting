@@ -1,4 +1,4 @@
-import { createFinancialYear } from "../utils/helper.js";
+import { createFinancialYear, decryptPayload } from "../utils/helper.js";
 import kafka from '../services/kafkaService.js';
 import Datacubeservices from '../services/datacubeServices.js';
 import { v4 as uuidv4 } from "uuid";
@@ -67,4 +67,11 @@ export async function registerMerchant(req, res) {
         console.error("❌ Failed to send merchant details to Kafka", err);
         res.status(500).json({ error: "Failed to register" });
     }
+}
+
+export async function decryptPayloadController(req, res) {
+    const payload = req.body.payload;
+    const decryptedPayload = await decryptPayload(payload);
+    console.log("Decrypted Payload:", decryptedPayload);
+    res.status(200).json({ success: true, message: "Payload decrypted successfully", payload: decryptedPayload });
 }

@@ -15,7 +15,7 @@ const MerchantUniqueScan = () => {
 
    // Check for encrypted token in URL on mount
    useEffect(() => {
-     const token = searchParams.get('qrId');
+     const token = searchParams.get('token');
      if (token) {
        handleDecryptToken(token);
      }
@@ -26,36 +26,38 @@ const MerchantUniqueScan = () => {
      setStatus('Decrypting order ID...');
 
      try {
-    //    const result = await merchantOrderAPI.decryptOrderId(encryptedToken);
-        const result = {success: true, orderId: encryptedToken};
+        console.log("This is the encrypted token:",encryptedToken)
+        const result = await merchantOrderAPI.decryptToken(encryptedToken);
+        console.log("This is the decrypted token:",result)
+        // const result = {success: true, orderId: encryptedToken};
 
-    //    if (result.success && result.orderId) {
+      if (result.success && result.decryptedToken) {
          setStatus('Checking order status...');
 
          // Check if order exists
-         const existingOrder = await merchantOrderAPI.getOrder(result.orderId);
+         const existingOrder = await merchantOrderAPI.getOrder(result.decryptedToken.orderId);
 
          if (existingOrder.success) {
            toast({
              title: 'Order Found',
-             description: `Loading order #${result.orderId} for update.`,
+            //  description: `Loading order #${result.orderId} for update.`,
            });
-           navigate(`/order/merchant/update/${result.orderId}`);
+           navigate(`/order/merchant/update/${result.decryptedToken.orderId}`);
          } else {
            toast({
              title: 'New Order',
-             description: `Creating new order with ID: ${result.orderId}`,
+            //  description: `Creating new order with ID: ${result.orderId}`,
            });
-           navigate(`/order/merchant/create/${result.orderId}`);
+           navigate(`/order/merchant/create/${result.decryptedToken.orderId}`);
          }
-    //    } else {
-    //      toast({
-    //        title: 'Decryption Failed',
-    //        description: result.message || 'Could not decrypt the order ID. Please try again.',
-    //        variant: 'destructive',
-    //      });
-    //      setProcessing(false);
-    //    }
+      } else {
+         toast({
+           title: 'Decryption Failed',
+           description: result.message || 'Could not decrypt the order ID. Please try again.',
+           variant: 'destructive',
+         });
+         setProcessing(false);
+        }
      } catch (error) {
        console.error('Decryption error:', error);
        toast({
@@ -73,7 +75,7 @@ const MerchantUniqueScan = () => {
      // Extract token from URL if present
      try {
        const url = new URL(scannedData);
-       const token = url.searchParams.get('qrId');
+       const token = url.searchParams.get('token');
 
        if (token) {
          handleDecryptToken(token);

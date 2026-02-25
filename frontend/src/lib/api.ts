@@ -72,8 +72,8 @@ export const adminAPI = {
   },
 }
 export const merchantOrderAPI = {
-  decryptOrderId: async (encryptedToken: string): Promise<{ success: boolean; orderId?: string; message?: string }> => {
-     const endpoint = `${BACKEND_URL}/merchant/decrypt-order-id`;
+  decryptToken: async (encryptedToken: string): Promise<{ success: boolean; message?: string, decryptedToken?: any }> => {
+     const endpoint = `${BACKEND_URL}/admin/decrypt`;
  
      try {
        console.log('Decrypting token:', encryptedToken);
@@ -97,8 +97,9 @@ export const merchantOrderAPI = {
        const res = await response.json();
        return {
          success: res.success,
-         orderId: res.orderId,
          message: res.message,
+         decryptedToken: res.payload
+
        };
      } catch (error) {
        console.error('API Call Error in merchantOrderAPI.decryptOrderId:', error);

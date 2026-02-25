@@ -1,4 +1,5 @@
 import Datacubeservices from "../services/datacubeServices.js";
+import crypto from "crypto";
 
 const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
 
@@ -82,5 +83,33 @@ const formatDate = function(date) {
     return `${dd}-${mm}-${yyyy}`;
   }
 
+const decryptPayload = function(token) {
+  if (!process.env.QR_ENCRYPTION_KEY) {
+    throw new Error("QR_ENCRYPTION_KEY missing");
+  }
 
-export { createFinancialYear, formatDate }
+  const key = Buffer.from(process.env.QR_ENCRYPTION_KEY.trim(), "hex");
+
+  if (key.length !== 32) {
+    throw new Error("Invalid encryption key length");
+  }
+
+  const buffer = Buffer.from(token, "base64url");
+
+  const iv = buffer.subarray(0, 12);
+  const tag = buffer.subarray(12, 28);
+  const encrypted = buffer.subarray(28);
+  const ALGO = "aes-256-gcm";
+
+  const decipher = crypto.createDecipheriv(ALGO, key, iv);
+  decipher.setAuthTag(tag);
+
+  const decrypted = Buffer.concat([
+    decipher.update(encrypted),
+    decipher.final()
+  ]);
+
+  return JSON.parse(decrypted.toString("utf8"));
+}
+
+export { createFinancialYear, formatDate, decryptPayload };
