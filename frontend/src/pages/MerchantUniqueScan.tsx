@@ -33,23 +33,33 @@ const MerchantUniqueScan = () => {
 
       if (result.success && result.decryptedToken) {
          setStatus('Checking order status...');
+        if (result.decryptedToken.qr_id == null) {
+          toast({
+             title: 'No Order Found',
+             description: `Incomplete QR code. Please check the QR code and try again.`,
+          });
+          navigate(`/order/merchant/`);
+        } else {
+          // Check if order exists
+          // sessionStorage.setItem('qr_id', result.decryptedToken.qr_id);
+          sessionStorage.setItem('scan_id', result.decryptedToken.scan_id);
 
-         // Check if order exists
-         const existingOrder = await merchantOrderAPI.getOrder(result.decryptedToken.orderId);
-
-         if (existingOrder.success) {
-           toast({
-             title: 'Order Found',
-            //  description: `Loading order #${result.orderId} for update.`,
-           });
-           navigate(`/order/merchant/update/${result.decryptedToken.orderId}`);
-         } else {
-           toast({
-             title: 'New Order',
-            //  description: `Creating new order with ID: ${result.orderId}`,
-           });
-           navigate(`/order/merchant/create/${result.decryptedToken.orderId}`);
-         }
+          const existingOrder = await merchantOrderAPI.getOrder(result.decryptedToken.qr_id);
+        
+          if (existingOrder.success) {
+            toast({
+              title: 'Order Found',
+              description: `Loading your order for update.`,
+            });
+            navigate(`/order/merchant/update/${result.decryptedToken.qr_id}`);
+          } else {
+            toast({
+              title: 'New Order',
+              description: `Creating new order`,
+            });
+            navigate(`/order/merchant/create/${result.decryptedToken.qr_id}`);
+          }
+        } 
       } else {
          toast({
            title: 'Decryption Failed',

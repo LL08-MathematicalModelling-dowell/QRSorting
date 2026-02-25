@@ -32,7 +32,8 @@ const MerchantForm = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set([0]));
-  
+  const scan_id = sessionStorage.getItem('scan_id');
+ 
   // Determine if this is a create or update based on route
   const isCreateRoute = location.pathname.includes('/order/merchant/create/');
   const [isNewOrder, setIsNewOrder] = useState(isCreateRoute);
@@ -148,6 +149,7 @@ const MerchantForm = () => {
           notes: formData.notes || undefined,
           audioBlob: audioBlob || undefined,
           imageBlob: imageBlob || undefined,
+          ...(scan_id && { scanId: scan_id })
         };
 
         const orderResponse = await merchantOrderAPI.createOrder(newOrder);
@@ -170,7 +172,8 @@ const MerchantForm = () => {
       } else {
         const updatedOrder: OrderUpdate = {
           orderId: orderId,
-          status: formData.status
+          status: formData.status,
+          ...(scan_id && { scanId: scan_id })
         }
         const updateResponse = await merchantOrderAPI.updateOrder(updatedOrder);
         if (!updateResponse.success) {
