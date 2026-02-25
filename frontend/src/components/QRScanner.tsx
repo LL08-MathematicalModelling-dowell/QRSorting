@@ -33,7 +33,7 @@ export const QRScanner = ({ onScan, onError, isOpen, onClose }: QRScannerProps) 
           fps: 5,
           // qrbox: { width: 250, height: 250 },
           qrbox: undefined,
-          // disableFlip: false
+          // disableFlip: false,
           // videoConstraints: {
           //   width: { ideal: 1280 },
           //   height: { ideal: 720 },
@@ -47,7 +47,7 @@ export const QRScanner = ({ onScan, onError, isOpen, onClose }: QRScannerProps) 
         },
         (error) => {
           // Ignore scan failures
-          console.log("QR Failed:", error);
+          // console.log("QR Failed:", error);
         }
       );
     } catch (err) {
