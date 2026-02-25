@@ -70,8 +70,30 @@ export async function registerMerchant(req, res) {
 }
 
 export async function decryptPayloadController(req, res) {
-    const payload = req.body.payload;
-    const decryptedPayload = await decryptPayload(payload);
-    console.log("Decrypted Payload:", decryptedPayload);
-    res.status(200).json({ success: true, message: "Payload decrypted successfully", payload: decryptedPayload });
+    const { token } = req.body;
+
+    if (!token) {
+        return res.status(400).json({
+            success: false,
+            message: "Token is required"
+        });
+    }
+
+    try {
+        const decryptedPayload = await decryptPayload(token);
+
+        console.log("Decrypted Payload:", decryptedPayload);
+
+        res.status(200).json({
+            success: true,
+            message: "Payload decrypted successfully",
+            payload: decryptedPayload
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
 }
