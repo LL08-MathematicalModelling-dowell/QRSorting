@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Package, Hash, ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,30 +11,38 @@ import { toast } from '@/hooks/use-toast';
 
 const CustomerEntry = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [orderId, setOrderId] = useState('');
   const [checking, setChecking] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [status, setStatus] = useState<string>('');
 
-  const handleCheckOrder = async () => {
+  // Check for encrypted token in URL on mount
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      handleDecryptToken(token);
+    }
+  }, [searchParams]);
+
+  const handleCheckOrder = async (orderId: string) => {
     if (!orderId.trim()) {
       toast({
         title: 'Order ID Required',
-        description: 'Please enter an order ID to track your delivery.',
+        description: 'Please enter the order ID to track your delivery.',
         variant: 'destructive',
       });
       return;
     }
 
     setChecking(true);
-    
-    // Simulate API check delay
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     const existingOrder = await merchantOrderAPI.getOrder(orderId.trim());
     
     if (existingOrder.success) {
       toast({
         title: 'Order Found',
-        description: `Loading tracking details for order #${orderId}`,
+        description: `Loading tracking details for your order`,
       });
       navigate(`/order/${orderId.trim()}`);
     } else {
@@ -46,6 +54,42 @@ const CustomerEntry = () => {
     }
     
     setChecking(false);
+  };
+
+  const handleDecryptToken = async (encryptedToken: string) => {
+    setProcessing(true);
+    setStatus('Decrypting order ID...');
+
+    try {
+       console.log("This is the encrypted token:",encryptedToken)
+       const result = await merchantOrderAPI.decryptToken(encryptedToken);
+       
+       console.log("This is the decrypted token:",result)
+
+     if (result.success && result.decryptedToken) {
+        setStatus('Checking order status...');
+        const orderId = result.decryptedToken.qr_id;
+        if (!orderId.trim()) {
+          toast({
+             title: 'Order ID not found',
+             description: `Incomplete QR code. Please check the QR code and try again.`,
+          });
+          navigate(`/order/`);
+        } else {
+          handleCheckOrder(orderId);
+          // sessionStorage.setItem('scan_id', result.decryptedToken.scan_id);
+        }
+     }
+    } catch (error) {
+      console.error('Error decrypting token:', error);
+      toast({
+        title: 'Error Decrypting Token',
+        description: 'An error occurred while decrypting the token. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -94,7 +138,7 @@ const CustomerEntry = () => {
                 placeholder="e.g., ORD-001"
                 className="mt-1.5"
                 autoFocus
-                onKeyDown={(e) => e.key === 'Enter' && handleCheckOrder()}
+                onKeyDown={(e) => e.key === 'Enter' && handleCheckOrder(orderId)}
               />
               <p className="text-xs text-muted-foreground mt-2">
                 You can find your order ID in the confirmation email or message.
@@ -103,7 +147,7 @@ const CustomerEntry = () => {
 
             <Button
               className="w-full font-semibold"
-              onClick={handleCheckOrder}
+              onClick={async () => await handleCheckOrder(orderId)}
               disabled={checking || !orderId.trim()}
             >
               {checking ? (
