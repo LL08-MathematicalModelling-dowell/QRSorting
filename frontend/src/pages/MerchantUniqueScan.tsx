@@ -28,11 +28,12 @@ const MerchantUniqueScan = () => {
      try {
         console.log("This is the encrypted token:",encryptedToken)
         const result = await merchantOrderAPI.decryptToken(encryptedToken);
+        
         console.log("This is the decrypted token:",result)
-        // const result = {success: true, orderId: encryptedToken};
 
       if (result.success && result.decryptedToken) {
          setStatus('Checking order status...');
+         navigate(`${result.decryptedToken.target_url}`)
         if (result.decryptedToken.qr_id == null) {
           toast({
              title: 'No Order Found',
@@ -84,16 +85,16 @@ const MerchantUniqueScan = () => {
 
      // Extract token from URL if present
      try {
-       const url = new URL(scannedData);
-       const token = url.searchParams.get('token');
-
+       const token = new URL(scannedData).searchParams.get('token');
        if (token) {
+        console.log("This is the token:",token)
          handleDecryptToken(token);
        } else {
          // Check if the scanned data itself is the token
          handleDecryptToken(scannedData);
        }
      } catch {
+      console.error('Invalid URL:', scannedData);
        // Not a valid URL, treat as raw token
        handleDecryptToken(scannedData);
      }

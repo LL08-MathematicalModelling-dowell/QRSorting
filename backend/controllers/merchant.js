@@ -22,23 +22,29 @@ async function sendtoKafka(data) {
 }
 
 export async function createOrder(req, res) {
-    console.log("This is the body:", req.body)
+    try{
+        console.log("Inside create order backend");
+        console.log("This is the body:", req.body.customerName)
 
-    let payload = {
-        ...req.body,
-        // audioFile: req.file ? req.file.buffer : null,
-        localtime: new Date().toISOString(),
-        dataType: "newOrder",
-    };
+        let payload = {
+            ...req.body,
+            // audioFile: req.file ? req.file.buffer : null,
+            localtime: new Date().toISOString(),
+            dataType: "newOrder",
+        };
 
-    console.log("This is the topic:",process.env.KAFKA_TOPIC)
-    try {
-            await sendtoKafka(payload);
-       
-        res.status(201).json({ success: true, message: "Order created successfully" });
-    } catch (err) {
-        console.error("❌ Failed to send order to Kafka", err);
-        res.status(500).json({ error: "Failed to order" });
+        console.log("This is the topic:",process.env.KAFKA_TOPIC)
+        try {
+                await sendtoKafka(payload);
+        
+            res.status(201).json({ success: true, message: "Order created successfully" });
+        } catch (err) {
+            console.error("❌ Failed to send order to Kafka", err);
+            res.status(500).json({ error: "Failed to order" });
+        }
+    }catch (err) {
+        console.error("❌ Failed to create order:", err);
+        res.status(500).json({ error: "Failed to create order" });
     }
 }
 
