@@ -70,7 +70,9 @@ export async function registerMerchant(req, res) {
 }
 
 export async function decryptPayloadController(req, res) {
+    console.log("Decryption token received")
     const { token } = req.body;
+    console.log("Token:", token);
 
     if (!token) {
         return res.status(400).json({
