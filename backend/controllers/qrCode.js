@@ -52,7 +52,7 @@ export const generateCustomQR = async (req, res) => {
       qrOptions: {
         color,
         backgroundColor,
-        logo, // 👈 optional uploaded image
+        logo,
       },
     });
 
