@@ -189,7 +189,7 @@ const MerchantForm = () => {
             title: 'Order Updated',
             description: 'Order details have been saved successfully.',
           });
-          navigate('/order/merchant');
+          navigate('/order/merchant/templates');
         }
       }
     } catch (error) {
