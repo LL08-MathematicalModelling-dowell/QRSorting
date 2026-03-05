@@ -120,6 +120,51 @@ services:
     networks:
       - app-network
 
+  medical-backend:
+    build: ../medical-labelling/backend
+    profiles:
+      - profileName=medical
+    env_file:
+      - ../medical-labelling/.env
+    environment:
+      PORT: 5001
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      - kafka
+      - redis
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  medical-consumer:
+    build: ../medical-labelling/consumer
+    profiles:
+      - profileName=medical
+    env_file:
+      - ../medical-labelling/.env
+    environment:
+      KAFKA_BROKER: kafka:9092
+      BACKEND_API_URL: http://medical-backend:5001
+    depends_on:
+      - kafka
+      - medical-backend
+      - redis
+    networks:
+      - app-network
+    restart: always
+
+  medical-frontend:
+    build: ../medical-labelling/frontend
+    profiles:
+      - profileName=medical
+    env_file:
+      - ../medical-labelling/.env
+    depends_on:
+      - medical-backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
 networks:
   app-network:
     driver: bridge
