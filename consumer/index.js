@@ -23,15 +23,17 @@ const run = async () => {
 
     // Start consuming messages
     await consumer.run({
+        maxBytes: 52428800,           // 50MB total per fetch
+        maxBytesPerPartition: 52428800,
         eachMessage: async ({ topic, partition, message }) => {
             try {
                 const data = JSON.parse(message.value.toString());
-                
+
                 console.log(`Received message from partition ${partition}:`, data);
                 if (data.dataType == 'newOrder') {
                     const res = await saveOrderDetails(data);
                     console.log("This is order creation block", res);
-                    
+
                 }
                 else if (data.dataType == 'newScan') {
                     const res = await saveScans(data);
