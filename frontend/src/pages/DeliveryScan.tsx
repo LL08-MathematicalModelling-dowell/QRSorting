@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Truck, QrCode, Hash, ArrowRight, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,19 +18,51 @@ const DeliveryScan = () => {
   const [orderId, setOrderId] = useState('');
   const [checking, setChecking] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [processing, setProcessing] = useState(false);
+  const [status, setStatus] = useState<string>('');
 
-  const handleScanSuccess = (scannedData: string) => {
-    // Extract order ID from URL if scanned
-    const orderIdMatch = scannedData.match(/order\/([^/?]+)/);
-    // if (orderIdMatch) {
-    //   setOrderId(orderIdMatch[1]);
-    // } else {
-    //   setOrderId(scannedData);
-    // }
-    setStep('orderId');
+  const handleScanSuccess = async(scannedData: string) => {
+    const token = new URL(scannedData).searchParams.get('token');
+    console.log("This is the token:",token)
+
+    if (token) {
+      setProcessing(true);
+      setStatus('Decrypting order ID...');
+
+      try {
+          const result = await merchantOrderAPI.decryptToken(token);
+          console.log("This is the decrypted token:",result)
+
+        if (result.success && result.decryptedToken) {
+          setStatus('Checking order status...');
+          const orderId = result.decryptedToken.qr_id;
+          if (!orderId.trim()) {
+            toast({
+                title: 'Order ID not found',
+                description: `Incomplete QR code. Please check the QR code and try again.`,
+            });
+            navigate(`/order/delivery/`);
+          } else {
+            handleCheckOrder(orderId);
+          }
+        }
+      } catch (error) {
+          console.error('Error decrypting token:', error);
+          toast({
+            title: 'Error Decrypting Token',
+            description: 'An error occurred while decrypting the token. Please try again.',
+            variant: 'destructive',
+          });
+        } finally {
+          setProcessing(false);
+        }
+    } else {
+        setStep('orderId');
+    }
   };
 
-  const handleCheckOrder = async () => {
+  const handleCheckOrder = async (orderId: string) => {
     if (!orderId.trim()) {
       toast({
         title: 'Order ID Required',
@@ -42,9 +74,6 @@ const DeliveryScan = () => {
 
     setChecking(true);
     
-    // Simulate API check delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     const existingOrder = await merchantOrderAPI.getOrder(orderId.trim());
     
     if (existingOrder.success) {
@@ -167,7 +196,7 @@ const DeliveryScan = () => {
                   placeholder="e.g., ORD-001"
                   className="mt-1.5"
                   autoFocus
-                  onKeyDown={(e) => e.key === 'Enter' && handleCheckOrder()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCheckOrder(orderId)}
                 />
                 <p className="text-xs text-muted-foreground mt-2">
                   Your current location will be captured for this order.
@@ -176,7 +205,7 @@ const DeliveryScan = () => {
 
               <Button
                 className="w-full gradient-delivery text-delivery-foreground font-semibold"
-                onClick={handleCheckOrder}
+                onClick={async () => await handleCheckOrder(orderId)}
                 disabled={checking || !orderId.trim()}
               >
                 {checking ? (

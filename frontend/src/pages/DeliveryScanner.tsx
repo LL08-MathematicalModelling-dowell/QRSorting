@@ -33,7 +33,7 @@ const DeliveryScanner = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [orderExists, setOrderExists] = useState<boolean | null>(null);
-
+  
   // Check if order exists on mount
   useEffect(() => {
     const checkOrder = async () => {
@@ -59,8 +59,7 @@ const DeliveryScanner = () => {
         setOrderExists(false);
       }
     };
-
-    checkOrder();
+    checkOrder()
   }, [orderId]);
 
   const captureLocation = useCallback(() => {
@@ -434,6 +433,7 @@ const DeliveryScanner = () => {
         );
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">

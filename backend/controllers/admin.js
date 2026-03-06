@@ -6,17 +6,19 @@ import { v4 as uuidv4 } from "uuid";
 const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
 
 async function sendtoKafka(data) {
-    const producer = kafka.producer();
+    const producer = kafka.producer({
+        maxRequestSize: 52428800
+    });
     await producer.connect();
     await producer.send({
-            topic: process.env.KAFKA_TOPIC,
-            messages: [{
-                "key": uuidv4(),
-                // "value": JSON.stringify({"name":"Exhibitor1","scans":"scans"})
-                "value": JSON.stringify(data)
-            }],
-               
-        });
+        topic: process.env.KAFKA_TOPIC,
+        messages: [{
+            "key": uuidv4(),
+            // "value": JSON.stringify({"name":"Exhibitor1","scans":"scans"})
+            "value": JSON.stringify(data)
+        }],
+
+    });
 
 }
 
@@ -28,21 +30,21 @@ export const createFinancialYearController = async (req, res) => {
 };
 
 export async function verifyMerchant(req, res) {
-    
+
     try {
         console.log("This is the query:", req.query)
         const phone = req.query.phoneNumber;
-        const filters = {"phoneNumber": phone};
+        const filters = { "phoneNumber": phone };
         console.log("Filters:", filters);
         const results = await datacube.dataRetrieval(process.env.MASTER_DATABASE_ID, process.env.MERCHANT_COLL, JSON.stringify(filters));
         console.log(results)
-        if (results.success && results.data.length > 0){
-            res.status(200).json({ success: true, message: "Verification successful", merchantDetails: results.data});
-        }else {
+        if (results.success && results.data.length > 0) {
+            res.status(200).json({ success: true, message: "Verification successful", merchantDetails: results.data });
+        } else {
             console.error("❌ Failed to get merchant details: 404");
             res.status(404).json({ success: false, message: "Merchant not found" });
         }
-        
+
     } catch (err) {
         console.error("❌ Failed to get merchant details:", err);
         res.status(500).json({ error: "Failed to get merchant details" });
@@ -58,10 +60,10 @@ export async function registerMerchant(req, res) {
         dataType: "newMerchant",
     };
 
-    console.log("This is the topic:",process.env.KAFKA_TOPIC)
+    console.log("This is the topic:", process.env.KAFKA_TOPIC)
     try {
-            await sendtoKafka(payload);
-       
+        await sendtoKafka(payload);
+
         res.status(201).json({ success: true, message: "Merchant registeration details sent successfully" });
     } catch (err) {
         console.error("❌ Failed to send merchant details to Kafka", err);
