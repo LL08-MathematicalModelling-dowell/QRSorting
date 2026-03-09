@@ -1,4 +1,5 @@
 import axios from 'axios';
+import FormData from 'form-data';
 
 class Datacubeservices {
     constructor(apiKey) {
@@ -150,6 +151,22 @@ class Datacubeservices {
             return response.data;
         } catch (error) {
             console.error('Error in dataDelete:', error);
+        }
+    }
+
+    async fileUpload(file, fileName) {
+        const url = `${this.baseUrl}/api/files/`
+        const form = new FormData()
+
+        form.append("file", fs.createReadStream(file));
+        form.append("filename",fileName);
+
+        try {
+            const response = await axios.post(url,form);
+
+        console.log("Upload Response:", response.data);
+        } catch (error) {
+            console.error("Upload Error:", error.response?.data || error.message);
         }
     }
 }
