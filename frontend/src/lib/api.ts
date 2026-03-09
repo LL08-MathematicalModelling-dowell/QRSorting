@@ -1,20 +1,20 @@
 import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult } from "@/types/order";
 
-const BACKEND_URL = '/api/v1';
+const BACKEND_URL = 'http://localhost:5000/api/v1';
 export const adminAPI = {
-    verifyMerchant: async (phoneNumber: string): Promise<{ success: boolean; message?: string, merchantDetails?: any }> => {
+  verifyMerchant: async (phoneNumber: string): Promise<{ success: boolean; message?: string, merchantDetails?: any }> => {
     const endpoint = `${BACKEND_URL}/admin/verify/?phoneNumber=${phoneNumber}`;
 
     try {
       console.log('Verifying merchant phone:', phoneNumber);
-      
+
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (!response.ok) {
         const errorDetail = await response.text();
         return {
@@ -22,9 +22,9 @@ export const adminAPI = {
           message: `Verification failed: ${errorDetail}`,
         };
       }
-      
+
       const res = await response.json();
-      console.log("This is the response:",  res);
+      console.log("This is the response:", res);
       return res;
     } catch (error) {
       console.error('API Call Error in adminAPI.verifyMerchant:', error);
@@ -40,7 +40,7 @@ export const adminAPI = {
 
     try {
       console.log('Registering merchant:', data.businessName);
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -48,7 +48,7 @@ export const adminAPI = {
         },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const errorDetail = await response.text();
         return {
@@ -56,7 +56,7 @@ export const adminAPI = {
           message: `Registration failed: ${errorDetail}`,
         };
       }
-      
+
       const res = await response.json();
       return {
         success: res.success,
@@ -73,69 +73,69 @@ export const adminAPI = {
 }
 export const merchantOrderAPI = {
   decryptToken: async (encryptedToken: string): Promise<{ success: boolean; message?: string, decryptedToken?: any }> => {
-     const endpoint = `${BACKEND_URL}/admin/decrypt`;
- 
-     try {
-       console.log('Decrypting token:', encryptedToken);
-       
-       const response = await fetch(endpoint, {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-         },
-         body: JSON.stringify({ token: encryptedToken }),
-       });
-       
-       if (!response.ok) {
-         const errorDetail = await response.text();
-         return {
-           success: false,
-           message: `Decryption failed: ${errorDetail}`,
-         };
-       }
-       
-       const res = await response.json();
-       return {
-         success: res.success,
-         message: res.message,
-         decryptedToken: res.payload
+    const endpoint = `${BACKEND_URL}/admin/decrypt`;
 
-       };
-     } catch (error) {
-       console.error('API Call Error in merchantOrderAPI.decryptOrderId:', error);
-       return {
-         success: false,
-         message: 'Network error during decryption',
-       };
-     }
-   },
+    try {
+      console.log('Decrypting token:', encryptedToken);
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: encryptedToken }),
+      });
+
+      if (!response.ok) {
+        const errorDetail = await response.text();
+        return {
+          success: false,
+          message: `Decryption failed: ${errorDetail}`,
+        };
+      }
+
+      const res = await response.json();
+      return {
+        success: res.success,
+        message: res.message,
+        decryptedToken: res.payload
+
+      };
+    } catch (error) {
+      console.error('API Call Error in merchantOrderAPI.decryptOrderId:', error);
+      return {
+        success: false,
+        message: 'Network error during decryption',
+      };
+    }
+  },
   getOrder: async (orderId: string): Promise<Order> => {
     console.log(`Fetching order: ${orderId}`);
     const endpoint = `${BACKEND_URL}/merchant/get-order/?orderId=${orderId}`;
 
     try {
       console.log(`Token Params from QR scan: ${orderId}`);
-      
+
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      
-      if (!response.ok){
+
+      if (!response.ok) {
         if (response.status === 404) {
-            const result: Order = {
-                success: false,
-                orderId: orderId
-            }
-            return result
+          const result: Order = {
+            success: false,
+            orderId: orderId
+          }
+          return result
         } else {
-            const errorDetail = await response.text();
-            throw new Error(`Failed to fetch order. Status: ${response.status}. Detail: ${errorDetail}`);
+          const errorDetail = await response.text();
+          throw new Error(`Failed to fetch order. Status: ${response.status}. Detail: ${errorDetail}`);
         }
       }
-      
+
       const res = await response.json();
       const orderDetails = res.orderDetails[0]
       console.log(orderDetails)
@@ -165,7 +165,7 @@ export const merchantOrderAPI = {
     }
   },
 
-  createOrder: async (order:Order): Promise<OrderResult> => {
+  createOrder: async (order: Order): Promise<OrderResult> => {
     console.log("This is the order:", order)
     const endpoint = `${BACKEND_URL}/merchant/create-order`;
     const fileUploadEndPoint = `${BACKEND_URL}/merchant/upload`
@@ -187,13 +187,13 @@ export const merchantOrderAPI = {
 
     try {
       console.log(`Token Params from QR scan: ${order.orderId}`);
-      
+
       // Convert blobs to base64 buffers if present
       // let imageBuffer: string | null = null;
       // let audioBuffer: string | null = null;
       let imageFileId: string | null = null;
       let audioFileId: string | null = null;
-      
+
       if (order.imageBlob) {
         const formData = new FormData();
         formData.append("file", order.imageBlob);
@@ -233,12 +233,12 @@ export const merchantOrderAPI = {
       //   imageBuffer = await blobToBase64(order.imageBlob);
       //   imageURL = URL.createObjectURL(order.imageBlob);
       // }
-      
+
       // if (order.audioBlob) {
       //   audioBuffer = await blobToBase64(order.audioBlob);
       //   audioURL = URL.createObjectURL(order.audioBlob);
-      
-      
+
+
       // Build order payload with buffer data
       const orderPayload = {
         ...order,
@@ -254,17 +254,17 @@ export const merchantOrderAPI = {
         },
         body: JSON.stringify(orderPayload),
       });
-      
-    if (!response.ok){
+
+      if (!response.ok) {
         const errorDetail = await response.text();
         throw new Error(`Failed to create order. Status: ${response.status}. Detail: ${errorDetail}`);
-    } else {
+      } else {
         const result: OrderResult = {
-            success: true,
-            message: "Order created successfully"
+          success: true,
+          message: "Order created successfully"
         }
         return result
-    }
+      }
 
     } catch (error) {
       console.error("API Call Error in merchantOrderAPI.createOrder:", error);
@@ -272,8 +272,8 @@ export const merchantOrderAPI = {
     }
   },
 
-  updateOrder: async (order:OrderUpdate): Promise<OrderResult> => {
-    
+  updateOrder: async (order: OrderUpdate): Promise<OrderResult> => {
+
     const endpoint = `${BACKEND_URL}/merchant/update-order`;
 
     try {
@@ -292,17 +292,17 @@ export const merchantOrderAPI = {
         },
         body: JSON.stringify(payload),
       });
-      
-    if (!response.ok){
+
+      if (!response.ok) {
         const errorDetail = await response.text();
         throw new Error(`Failed to update order. Status: ${response.status}. Detail: ${errorDetail}`);
-    } else {
+      } else {
         const result: OrderResult = {
-            success: true,
-            message: "Order updated successfully"
+          success: true,
+          message: "Order updated successfully"
         }
         return result
-    }
+      }
 
     } catch (error) {
       console.error("API Call Error in merchantOrderAPI.updateOrder:", error);
@@ -312,13 +312,13 @@ export const merchantOrderAPI = {
 };
 
 export const scanAPI = {
-  insertScan: async (scan:ScanningUpdate): Promise<OrderResult> => {
+  insertScan: async (scan: ScanningUpdate): Promise<OrderResult> => {
     console.log(scan)
     const endpoint = `${BACKEND_URL}/scan/create-scan`;
 
     try {
       console.log(`Token Params from QR scan: ${scan.orderId}`);
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -326,17 +326,17 @@ export const scanAPI = {
         },
         body: JSON.stringify(scan),
       });
-      
-    if (!response.ok){
+
+      if (!response.ok) {
         const errorDetail = await response.text();
         throw new Error(`Failed to save delivery status. Status: ${response.status}. Detail: ${errorDetail}`);
-    } else {
+      } else {
         const result: OrderResult = {
-            success: true,
-            message: "Scan successfully saved"
+          success: true,
+          message: "Scan successfully saved"
         }
         return result
-    }
+      }
 
     } catch (error) {
       console.error("API Call Error in scanAPI.insertScan:", error);
@@ -345,35 +345,35 @@ export const scanAPI = {
   },
 
   getScans: async (orderId: string, date: string): Promise<ScanResult> => {
-    
+
     const endpoint = `${BACKEND_URL}/scan/get-scans/?orderId=${orderId}&date=${date}`;
 
     try {
       console.log(`Fetching scans for order: ${orderId}, ${date}`);
-      
+
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      
-      if (!response.ok){
+
+      if (!response.ok) {
         if (response.status === 404) {
-            const result: ScanResult = {
-                success: false,
-                message: "Tracking details not found for this order",
-                scanDetails: null
-            }
+          const result: ScanResult = {
+            success: false,
+            message: "Tracking details not found for this order",
+            scanDetails: null
+          }
           return result
         } else {
-            const errorDetail = await response.text();
-            throw new Error(`Failed to fetch scans. Status: ${response.status}. Detail: ${errorDetail}`);
+          const errorDetail = await response.text();
+          throw new Error(`Failed to fetch scans. Status: ${response.status}. Detail: ${errorDetail}`);
         }
       }
-  
+
       const res = await response.json();
-      
+
       console.log(res)
       const result: ScanResult = {
         success: res.success,
