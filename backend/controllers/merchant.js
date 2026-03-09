@@ -115,3 +115,25 @@ export async function updateOrderDetails(req, res) {
         res.status(500).json({ error: "Failed to update order details" });
     }
 }
+
+export async function uploadFile(req, res)  {
+
+  try {
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+
+    const result = await datacube.fileUpload(filePath, fileName);
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "File upload failed",
+      error: error.message
+    });
+  }
+};

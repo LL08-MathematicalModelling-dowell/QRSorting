@@ -168,47 +168,83 @@ export const merchantOrderAPI = {
   createOrder: async (order:Order): Promise<OrderResult> => {
     console.log("This is the order:", order)
     const endpoint = `${BACKEND_URL}/merchant/create-order`;
+    const fileUploadEndPoint = `${BACKEND_URL}/merchant/upload`
 
     // Helper function to convert Blob to base64 buffer string
-    const blobToBase64 = (blob: Blob): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result as string;
-          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-          const base64Data = base64String.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    };
+    // const blobToBase64 = (blob: Blob): Promise<string> => {
+    //   return new Promise((resolve, reject) => {
+    //     const reader = new FileReader();
+    //     reader.onloadend = () => {
+    //       const base64String = reader.result as string;
+    //       // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+    //       const base64Data = base64String.split(',')[1];
+    //       resolve(base64Data);
+    //     };
+    //     reader.onerror = reject;
+    //     reader.readAsDataURL(blob);
+    //   });
+    // };
 
     try {
       console.log(`Token Params from QR scan: ${order.orderId}`);
       
       // Convert blobs to base64 buffers if present
-      let imageBuffer: string | null = null;
-      let audioBuffer: string | null = null;
-      let imageURL: string | null = null;
-      let audioURL: string | null = null;
+      // let imageBuffer: string | null = null;
+      // let audioBuffer: string | null = null;
+      let imageFileId: string | null = null;
+      let audioFileId: string | null = null;
       
       if (order.imageBlob) {
-        imageBuffer = await blobToBase64(order.imageBlob);
-        imageURL = URL.createObjectURL(order.imageBlob);
+        const formData = new FormData();
+        formData.append("file", order.imageBlob);
+        formData.append("filename", `order-image-${order.orderId}`);
+
+        const uploadResponse = await fetch(fileUploadEndPoint, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Image upload failed for order ${order.orderId}`);
+        }
+
+        const uploadResult = await uploadResponse.json();
+        imageFileId = uploadResult.file_id;
       }
-      
+
+      // Upload audio
       if (order.audioBlob) {
-        audioBuffer = await blobToBase64(order.audioBlob);
-        audioURL = URL.createObjectURL(order.audioBlob);
+        const formData = new FormData();
+        formData.append("file", order.audioBlob);
+        formData.append("filename", `order-audio-${order.orderId}`);
+
+        const uploadResponse = await fetch(fileUploadEndPoint, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Audio upload failed for order ${order.orderId}`);
+        }
+
+        const uploadResult = await uploadResponse.json();
+        audioFileId = uploadResult.file_id;
       }
+      //   imageBuffer = await blobToBase64(order.imageBlob);
+      //   imageURL = URL.createObjectURL(order.imageBlob);
+      // }
+      
+      // if (order.audioBlob) {
+      //   audioBuffer = await blobToBase64(order.audioBlob);
+      //   audioURL = URL.createObjectURL(order.audioBlob);
+      
       
       // Build order payload with buffer data
       const orderPayload = {
         ...order,
-        imageBuffer: imageBuffer,
+        imageFileId: imageFileId,
         imageType: order.imageBlob?.type || null,
-        audioBuffer: audioBuffer,
+        audioFileId: audioFileId,
         audioType: order.audioBlob?.type || null,
       };
       const response = await fetch(endpoint, {
