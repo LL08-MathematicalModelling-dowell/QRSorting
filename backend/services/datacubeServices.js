@@ -1,26 +1,28 @@
 import axios from 'axios';
 import FormData from 'form-data';
-
+import fs from 'fs';
 class Datacubeservices {
     constructor(apiKey) {
         this.apiKey = apiKey;
         this.baseUrl = 'https://datacube.uxlivinglab.online/api';
         // this.baseUrl = 'https://www.dowelldatacube.uxlivinglab.online/db_api';
         this.headers = {
-        Authorization: `Api-Key ${apiKey}`,
-        ContentType: "application/json"
+            Authorization: `Api-Key ${apiKey}`,
+            // "Authorization": `Api-Key ${apiKey}`,
+            ContentType: "application/json"
+            // "Content-Type": "application/json"
         }
     }
 
     async dbCreation(dbName, collections) {
         const url = `${this.baseUrl}/create_database`;
-        
+
         const payload = {
             db_name: dbName,
             collections: collections
         };
         try {
-            const response = await axios.post(url, payload,{headers: this.headers});
+            const response = await axios.post(url, payload, { headers: this.headers });
             return response.data;
         } catch (error) {
             console.log(error);
@@ -35,14 +37,14 @@ class Datacubeservices {
 
     async dataInsertion(databaseId, collectionName, data) {
         const url = `${this.baseUrl}/crud/`;
-        
+
         const payload = {
             database_id: databaseId,
             collection_name: collectionName,
             data: [data]
         };
         try {
-            const response = await axios.post(url, payload,{headers: this.headers});
+            const response = await axios.post(url, payload, { headers: this.headers });
             return response.data;
         } catch (error) {
             console.log(error);
@@ -56,9 +58,9 @@ class Datacubeservices {
 
     async dataRetrieval(databaseId, collectionName, filters) {
         const url = `${this.baseUrl}/crud/?database_id=${databaseId}&collection_name=${collectionName}&filters=${filters}`;
-        
+
         try {
-            const response = await axios.get(url,{headers: this.headers});
+            const response = await axios.get(url, { headers: this.headers });
             return response.data;
         } catch (error) {
             console.log(error);
@@ -72,7 +74,7 @@ class Datacubeservices {
 
     async dataUpdate(databaseId, collectionName, filters, updateData) {
         const url = `${this.baseUrl}/crud/`;
-        
+
         const payload = {
             database_id: databaseId,
             collection_name: collectionName,
@@ -80,7 +82,7 @@ class Datacubeservices {
             update_data: updateData
         };
         try {
-            const response = await axios.put(url, payload, {headers: this.headers});
+            const response = await axios.put(url, payload, { headers: this.headers });
             return {
                 success: true,
                 message: "Data updated successfully",
@@ -97,18 +99,18 @@ class Datacubeservices {
 
     async createCollection(databaseId, collections) {
         const url = `${this.baseUrl}/add_collection/`;
-    //     {
-            // "collections": [{
-            //     "name":"LatIndex",
-            // "fields":[ {"name":"latitude","type":"number"}, {"name":"longitude","type":"number"}]
+        //     {
+        // "collections": [{
+        //     "name":"LatIndex",
+        // "fields":[ {"name":"latitude","type":"number"}, {"name":"longitude","type":"number"}]
         // }]
-    //   }
+        //   }
         const payload = {
             database_id: databaseId,
             collections: collections
         };
         try {
-            const response = await axios.post(url, payload, {headers: this.headers});
+            const response = await axios.post(url, payload, { headers: this.headers });
             return response.data;
         } catch (error) {
             return {
@@ -119,12 +121,12 @@ class Datacubeservices {
         }
     }
 
-   
+
     async collectionRetrieval(databaseId) {
         const url = `${this.baseUrl}/list_collections/?database_id=${databaseId}`;
-        
+
         try {
-            const response = await axios.get(url,{headers: this.headers});
+            const response = await axios.get(url, { headers: this.headers });
             return response.data;
         } catch (error) {
             console.log(error);
@@ -155,16 +157,24 @@ class Datacubeservices {
     }
 
     async fileUpload(file, fileName) {
-        const url = `${this.baseUrl}/api/files/`
-        const form = new FormData()
-
-        form.append("file", fs.createReadStream(file));
-        form.append("filename",fileName);
-
         try {
-            const response = await axios.post(url,form);
+            console.log("Inisde file upload services")
 
-        console.log("Upload Response:", response.data);
+            const url = `${this.baseUrl}/files/`
+            const form = new FormData()
+
+            form.append("file", fs.createReadStream(file));
+            form.append("filename", fileName);
+            const headers = {
+                ...this.headers,
+                ...form.getHeaders()
+            }
+
+
+            const response = await axios.post(url, form, { headers });
+
+            console.log("Upload Response:", response.data);
+            return response.data
         } catch (error) {
             console.error("Upload Error:", error.response?.data || error.message);
         }

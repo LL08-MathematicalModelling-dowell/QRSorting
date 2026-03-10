@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { timeStamp } from 'console';
 import QRCodeGenerator from '../services/qrcodeService.js';
 
+
 const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
 
 async function sendtoKafka(data) {
@@ -116,24 +117,32 @@ export async function updateOrderDetails(req, res) {
     }
 }
 
-export async function uploadFile(req, res)  {
+export async function uploadFile(req, res) {
 
-  try {
-    const filePath = req.file.path;
-    const fileName = req.file.originalname;
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "No file provided. Check your field name (it should be 'file')."
+            });
+        }
+        console.log("req.file", req.file)
+        const filePath = req.file.path;
+        const fileName = req.file.originalname;
 
-    const result = await datacube.fileUpload(filePath, fileName);
+        const result = await datacube.fileUpload(filePath, fileName);
 
-    res.status(200).json({
-      success: true,
-      data: result
-    });
+        res.status(200).json({
+            success: true,
+            data: result
+        });
 
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "File upload failed",
-      error: error.message
-    });
-  }
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            success: false,
+            message: "File upload failed",
+            error: error.message
+        });
+    }
 };
