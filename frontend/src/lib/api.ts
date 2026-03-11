@@ -1,6 +1,6 @@
 import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult } from "@/types/order";
 
-const BACKEND_URL = 'http://localhost:5000/api/v1';
+const BACKEND_URL = '/api/v1';
 export const adminAPI = {
   verifyMerchant: async (phoneNumber: string): Promise<{ success: boolean; message?: string, merchantDetails?: any }> => {
     const endpoint = `${BACKEND_URL}/admin/verify/?phoneNumber=${phoneNumber}`;
