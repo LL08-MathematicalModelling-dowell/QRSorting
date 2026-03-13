@@ -16,6 +16,7 @@ const MerchantUniqueScan = () => {
    // Check for encrypted token in URL on mount
    useEffect(() => {
      const token = searchParams.get('token');
+    
      if (token) {
        handleDecryptToken(token);
      }
@@ -33,7 +34,7 @@ const MerchantUniqueScan = () => {
 
       if (result.success && result.decryptedToken) {
          setStatus('Checking order status...');
-         navigate(`${result.decryptedToken.target_url}`)
+         
         if (result.decryptedToken.qr_id == null) {
           toast({
              title: 'No Order Found',
@@ -44,21 +45,21 @@ const MerchantUniqueScan = () => {
           // Check if order exists
           // sessionStorage.setItem('qr_id', result.decryptedToken.qr_id);
           // sessionStorage.setItem('scan_id', result.decryptedToken.scan_id);
-
-          const existingOrder = await merchantOrderAPI.getOrder(result.decryptedToken.qr_id);
+          const decryptedOrderId = result.decryptedToken.qr_id.toLowerCase()
+          const existingOrder = await merchantOrderAPI.getOrder(decryptedOrderId);
         
           if (existingOrder.success) {
             toast({
               title: 'Order Found',
               description: `Loading your order for update.`,
             });
-            navigate(`/order/merchant/update/${result.decryptedToken.qr_id}`);
+            navigate(`/order/merchant/update/${decryptedOrderId}`);
           } else {
             toast({
               title: 'New Order',
               description: `Creating new order`,
             });
-            navigate(`/order/merchant/create/${result.decryptedToken.qr_id}`);
+            navigate(`/order/merchant/create/${decryptedOrderId}`);
           }
         } 
       } else {

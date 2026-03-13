@@ -203,13 +203,16 @@ export const merchantOrderAPI = {
           method: "POST",
           body: formData
         });
+        
 
         if (!uploadResponse.ok) {
           throw new Error(`Image upload failed for order ${order.orderId}`);
         }
 
+
         const uploadResult = await uploadResponse.json();
-        imageFileId = uploadResult.file_id;
+        console.log("Image Upload Result:", uploadResult)
+        imageFileId = uploadResult.data.file_id;
       }
 
       // Upload audio
@@ -224,11 +227,13 @@ export const merchantOrderAPI = {
         });
 
         if (!uploadResponse.ok) {
+
           throw new Error(`Audio upload failed for order ${order.orderId}`);
         }
 
         const uploadResult = await uploadResponse.json();
-        audioFileId = uploadResult.file_id;
+        console.log("Audio Upload Result:", uploadResult)
+        audioFileId = uploadResult.data.file_id;
       }
       //   imageBuffer = await blobToBase64(order.imageBlob);
       //   imageURL = URL.createObjectURL(order.imageBlob);
@@ -240,6 +245,9 @@ export const merchantOrderAPI = {
 
 
       // Build order payload with buffer data
+      delete order.imageBlob
+      delete order.audioBlob
+
       const orderPayload = {
         ...order,
         imageFileId: imageFileId,
