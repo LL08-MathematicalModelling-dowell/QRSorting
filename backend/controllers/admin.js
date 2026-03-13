@@ -42,7 +42,7 @@ export async function verifyMerchant(req, res) {
             res.status(200).json({ success: true, message: "Verification successful", merchantDetails: results.data });
         } else {
             console.error("❌ Failed to get merchant details: 404");
-            res.status(404).json({ success: false, message: "Merchant not found" });
+            res.status(404).json({ success: false, message: "Failed to get merchant details" });
         }
 
     } catch (err) {

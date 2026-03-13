@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { AudioRecorder } from '@/components/AudioRecorder';
 import { ImageUploader } from '@/components/ImageUploader';
-// import { getOrder, updateOrder, createOrder } from '@/lib/mockData';
 import { OrderStatus, OrderItem, GarmentSpecification, Order, OrderUpdate } from '@/types/order';
 import { toast } from '@/hooks/use-toast';
 import { merchantOrderAPI } from '@/lib/api';
@@ -32,10 +31,7 @@ const MerchantForm = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set([0]));
-  // const scan_id = sessionStorage.getItem('scan_id');
-
-  // console.log("Scan ID:", scan_id);
- 
+  
   // Determine if this is a create or update based on route
   const isCreateRoute = location.pathname.includes('/order/merchant/create/');
   const [isNewOrder, setIsNewOrder] = useState(isCreateRoute);
@@ -55,8 +51,8 @@ const MerchantForm = () => {
       price: 0, 
       specifications: [{ id: '1', fieldName: '', value: '' }] 
     }] as OrderItem[],
-    audioBlob: undefined,
-    imageBlob: undefined
+    // audioBlob: undefined,
+    // imageBlob: undefined
   });
 
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -76,19 +72,19 @@ const MerchantForm = () => {
     if (orderId) {
       const order = await merchantOrderAPI.getOrder(orderId);
       if (order.success) {
-        console.log("AUDIO BUFFER:", order.audioBuffer, order.audioType);
-        console.log("IMAGE BUFFER:", order.imageBuffer, order.imageType);
-        if (order.audioBuffer && order.audioType) {
-          const audio = base64ToBlob(order.audioBuffer, order.audioType);
-          console.log("AUDIO BLOB:", audio, audio.size);
-          setAudioBlob(audio);
-        }
+        // console.log("AUDIO BUFFER:", order.audioBuffer, order.audioType);
+        // console.log("IMAGE BUFFER:", order.imageBuffer, order.imageType);
+        // if (order.audioBuffer && order.audioType) {
+        //   const audio = base64ToBlob(order.audioBuffer, order.audioType);
+        //   console.log("AUDIO BLOB:", audio, audio.size);
+        //   setAudioBlob(audio);
+        // }
 
-        if (order.imageBuffer && order.imageType) {
-          const image = base64ToBlob(order.imageBuffer, order.imageType);
-          console.log("IMAGE BLOB:", image, image.size);
-          setImageBlob(image);
-        }
+        // if (order.imageBuffer && order.imageType) {
+        //   const image = base64ToBlob(order.imageBuffer, order.imageType);
+        //   console.log("IMAGE BLOB:", image, image.size);
+        //   setImageBlob(image);
+        // }
 
         setFormData({
           merchantName: sessionStorage.getItem("businessName"),
@@ -99,8 +95,8 @@ const MerchantForm = () => {
           estimatedDelivery: order.estimatedDelivery || '',
           notes: order.notes || '',
           items: order.items,
-          audioBlob: undefined,
-          imageBlob: undefined
+          // audioBlob: undefined,
+          // imageBlob: undefined
         });
         setIsNewOrder(false);
         // Expand all items when editing
@@ -128,6 +124,7 @@ const MerchantForm = () => {
     setSaving(true);
 
     try {
+      console.log("Ready to create order")
       // Filter out empty items and specifications
       const cleanedItems = formData.items
         .filter(item => item.garmentType)
@@ -135,6 +132,7 @@ const MerchantForm = () => {
           ...item,
           specifications: item.specifications.filter(spec => spec.fieldName || spec.value)
         }));
+        console.log("Cleaned Items:", cleanedItems)
 
       if (isNewOrder) {
         const newOrder: Order = {
@@ -145,15 +143,12 @@ const MerchantForm = () => {
           customerAddress: formData.customerAddress,
           items: cleanedItems,
           status: formData.status,
-          // pickupLocation: { lat: 40.7128, lng: -74.006, timestamp: Date.now() },
-          // deliveryLocation: { lat: 40.7282, lng: -73.9942, timestamp: 0 },
           estimatedDelivery: formData.estimatedDelivery || undefined,
           notes: formData.notes || undefined,
           audioBlob: audioBlob || undefined,
-          imageBlob: imageBlob || undefined,
-          // ...(scan_id && { scanId: scan_id })
+          imageBlob: imageBlob || undefined
         };
-
+        console.log("New Order details:", newOrder)
         const orderResponse = await merchantOrderAPI.createOrder(newOrder);
         if (orderResponse.success) {
             toast({
@@ -163,7 +158,7 @@ const MerchantForm = () => {
           
           navigate(`/order/merchant/update/${newOrder.orderId}`);
         } else  {
-          toast({
+          toast({ 
             title: 'Error',
             description: 'Failed to create order. Please try again.',
             variant: 'destructive',
@@ -175,7 +170,6 @@ const MerchantForm = () => {
         const updatedOrder: OrderUpdate = {
           orderId: orderId,
           status: formData.status,
-          // ...(scan_id && { scanId: scan_id })
         }
         const updateResponse = await merchantOrderAPI.updateOrder(updatedOrder);
         if (!updateResponse.success) {
