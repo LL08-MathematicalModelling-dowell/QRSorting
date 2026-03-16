@@ -33,7 +33,7 @@ const MerchantForm = () => {
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set([0]));
   
   // Determine if this is a create or update based on route
-  const isCreateRoute = location.pathname.includes('/order/merchant/create/');
+  const isCreateRoute = location.pathname.startsWith('/order/merchant/create/');
   const [isNewOrder, setIsNewOrder] = useState(isCreateRoute);
   
   const [formData, setFormData] = useState({
@@ -156,7 +156,8 @@ const MerchantForm = () => {
             description: `Order ${newOrder.orderId} has been created successfully.`,
           });
           
-          navigate(`/order/merchant/update/${newOrder.orderId}`);
+          // navigate(`/order/merchant/update/${newOrder.orderId}`);
+          navigate('/order/merchant/templates');
         } else  {
           toast({ 
             title: 'Error',

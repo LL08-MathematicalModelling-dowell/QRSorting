@@ -62,6 +62,9 @@ export async function getOrderDetails(req, res) {
         const results = await datacube.dataRetrieval(process.env.MASTER_DATABASE_ID, collId, JSON.stringify(filters));
         console.log(results)
         if (results.success && results.data.length > 0) {
+            const imageFileId = results.data[0].imageFileId;
+            const audioFileId = results.data[0].audioFileId;
+            
             res.status(200).json({ success: true, message: "Retrieved order details successfully", orderDetails: results.data });
         } else {
             console.error("❌ Failed to get order details: 404");

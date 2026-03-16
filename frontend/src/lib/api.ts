@@ -152,8 +152,8 @@ export const merchantOrderAPI = {
         deliveryLocation: orderDetails.customerAddress,
         estimatedDelivery: orderDetails.estimatedDelivery,
         notes: orderDetails.notes,
-        audioBuffer: orderDetails.audioBuffer,
-        imageBuffer: orderDetails.imageBuffer,
+        audioFileId: orderDetails.audioFileId,
+        imageFileId: orderDetails.imageFileId,
         audioType: orderDetails.audioType,
         imageType: orderDetails.imageType
       };

@@ -179,6 +179,16 @@ class Datacubeservices {
             console.error("Upload Error:", error.response?.data || error.message);
         }
     }
+
+    async fileDownload() {
+        try {
+            const url = `${this.baseUrl}/files/?page=1&page_size=10&search=report`;
+            const response = await axios.get(url, { responseType: 'arraybuffer' });
+            return response.data;
+        } catch (error) {
+            console.error("Download Error:", error.response?.data || error.message);
+        }
+    }
 }
 
 export default Datacubeservices;
