@@ -155,9 +155,10 @@ const MerchantForm = () => {
             title: 'Order Created',
             description: `Order ${newOrder.orderId} has been created successfully.`,
           });
-          
-          // navigate(`/order/merchant/update/${newOrder.orderId}`);
-          navigate('/order/merchant/templates');
+          const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+          await delay(15000);
+          navigate(`/order/merchant/update/${newOrder.orderId}`);
+          // navigate('/order/merchant/templates');
         } else  {
           toast({ 
             title: 'Error',
