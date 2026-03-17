@@ -15,8 +15,8 @@ const MerchantUniqueScan = () => {
 
    // Check for encrypted token in URL on mount
    useEffect(() => {
-    //  const token = searchParams.get('token');
-    const token = "Yg8bCamgeIlhrk46VmGBt8urhMHUzLnPIpJITeBbgGy7_BBLgqCU41WuG5mGc7vHLrxy8qELlRiQCiY_wwvti6YWlPQBzFk2ik1sw1y6Cfkb-EsovZpaUq_wyKJXpNbmLUxqLPXwqWacOacZ0hhWroCyaNVEXEdwDJYmIOPtRmuUEerwm_krxUTdMRFmhY4-24PjRVUrnV33"
+     const token = searchParams.get('token');
+    
      if (token) {
        handleDecryptToken(token);
      }
