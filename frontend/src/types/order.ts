@@ -50,6 +50,8 @@ export interface Order {
   notes?: string;
   audioBlob?: Blob;
   imageBlob?: Blob;
+  audioBuffer?: string;
+  imageBuffer?: string;
   audioFileId?: string;
   imageFileId?: string;
   audioType?: string;
