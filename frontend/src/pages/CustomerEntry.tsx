@@ -19,9 +19,10 @@ const CustomerEntry = () => {
 
   // Check for encrypted token in URL on mount
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      handleDecryptToken(token);
+    const id = searchParams.get('id');
+    
+    if (id) {
+      handleDecryptToken(id);
     }
   }, [searchParams]);
 
@@ -48,7 +49,7 @@ const CustomerEntry = () => {
     } else {
       toast({
         title: 'Order Not Found',
-        description: `No order exists with ID: ${orderId}. Please check the ID and try again.`,
+        description: `Could not find your order". Please check the Order ID and try again.`,
         variant: 'destructive',
       });
     }
@@ -56,19 +57,19 @@ const CustomerEntry = () => {
     setChecking(false);
   };
 
-  const handleDecryptToken = async (encryptedToken: string) => {
+  const handleDecryptToken = async (encryptedId: string) => {
     setProcessing(true);
     setStatus('Decrypting order ID...');
 
     try {
-       console.log("This is the encrypted token:",encryptedToken)
-       const result = await merchantOrderAPI.decryptToken(encryptedToken);
+       console.log("This is the encrypted Id:",encryptedId)
+       const result = await merchantOrderAPI.decryptToken(encryptedId);
        
-       console.log("This is the decrypted token:",result)
+       console.log("This is the decrypted Id:",result)
 
-     if (result.success && result.decryptedToken) {
+     if (result.success && result.decryptedId){
         setStatus('Checking order status...');
-        const orderId = result.decryptedToken.qr_id;
+        const orderId = result.decryptedId.qr_id;
         if (!orderId.trim()) {
           toast({
              title: 'Order ID not found',
