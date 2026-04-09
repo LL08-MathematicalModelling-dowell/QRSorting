@@ -3,7 +3,7 @@ import kafka from '../services/kafkaService.js';
 import Datacubeservices from '../services/datacubeServices.js';
 import { v4 as uuidv4 } from "uuid";
 
-const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
+const datacube = new Datacubeservices(process.env.VITE_DATACUBE_API_KEY);
 
 async function sendtoKafka(data) {
     const producer = kafka.producer({
@@ -73,18 +73,18 @@ export async function registerMerchant(req, res) {
 
 export async function decryptPayloadController(req, res) {
     console.log("Decryption token received")
-    const { token } = req.body;
-    console.log("Token:", token);
+    const { id } = req.body;
+    console.log("id:", id);
 
-    if (!token) {
+    if (!id) {
         return res.status(400).json({
             success: false,
-            message: "Token is required"
+            message: "Id is required"
         });
     }
 
     try {
-        const decryptedPayload = await decryptPayload(token);
+        const decryptedPayload =  await decryptPayload(id);
 
         console.log("Decrypted Payload:", decryptedPayload);
 

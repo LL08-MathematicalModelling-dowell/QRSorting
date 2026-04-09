@@ -51,8 +51,8 @@ const MerchantForm = () => {
       price: 0, 
       specifications: [{ id: '1', fieldName: '', value: '' }] 
     }] as OrderItem[],
-    // audioBlob: undefined,
-    // imageBlob: undefined
+    audioBlob: undefined,
+    imageBlob: undefined
   });
 
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -72,18 +72,23 @@ const MerchantForm = () => {
     if (orderId) {
       const order = await merchantOrderAPI.getOrder(orderId);
       if (order.success) {
-        // console.log("AUDIO BUFFER:", order.audioBuffer, order.audioType);
-        // console.log("IMAGE BUFFER:", order.imageBuffer, order.imageType);
-        // if (order.audioBuffer && order.audioType) {
-        //   const audio = base64ToBlob(order.audioBuffer, order.audioType);
-        //   console.log("AUDIO BLOB:", audio, audio.size);
-        //   setAudioBlob(audio);
+        console.log("AUDIO :", order.audioFileId, order.audioType);
+        console.log("IMAGE :", order.imageFileId, order.imageType);
+        // if (order.audioFileId) {
+        //   const audioRaw = await merchantOrderAPI.getMediaFiles(order.audioFileId);
+        //   const audioBlob = new Blob([audioRaw], { type: 'audio/mpeg' });
+        //   console.log("AUDIO BLOB:", audioRaw);
+        //   setAudioBlob(audioBlob);
         // }
 
-        // if (order.imageBuffer && order.imageType) {
-        //   const image = base64ToBlob(order.imageBuffer, order.imageType);
-        //   console.log("IMAGE BLOB:", image, image.size);
-        //   setImageBlob(image);
+        // if (order.imageFileId ) {
+        //   const imageRaw = await merchantOrderAPI.getMediaFiles(order.imageFileId);
+        //   console.log("IMAGE RAW:", imageRaw);
+        //   const text = await imageRaw.text();
+        //   console.log("HTML RESPONSE:", text);
+        //   // const imageBlob = new Blob([imageRaw], { type: 'image/jpeg' });
+        //   // console.log("IMAGE BLOB:", imageRaw);
+        //   setImageBlob(imageRaw);
         // }
 
         setFormData({
@@ -95,8 +100,8 @@ const MerchantForm = () => {
           estimatedDelivery: order.estimatedDelivery || '',
           notes: order.notes || '',
           items: order.items,
-          // audioBlob: undefined,
-          // imageBlob: undefined
+          audioBlob: undefined,
+          imageBlob: undefined
         });
         setIsNewOrder(false);
         // Expand all items when editing

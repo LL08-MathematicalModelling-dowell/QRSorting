@@ -72,18 +72,18 @@ export const adminAPI = {
   },
 }
 export const merchantOrderAPI = {
-  decryptToken: async (encryptedToken: string): Promise<{ success: boolean; message?: string, decryptedToken?: any }> => {
+  decryptToken: async (encryptedId: string): Promise<{ success: boolean; message?: string, decryptedId?: any }> => {
     const endpoint = `${BACKEND_URL}/admin/decrypt`;
 
     try {
-      console.log('Decrypting token:', encryptedToken);
+      console.log('Decrypting token:', encryptedId);
 
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token: encryptedToken }),
+        body: JSON.stringify({ id: encryptedId }),
       });
 
       if (!response.ok) {
@@ -98,7 +98,7 @@ export const merchantOrderAPI = {
       return {
         success: res.success,
         message: res.message,
-        decryptedToken: res.payload
+        decryptedId: res.payload
 
       };
     } catch (error) {
@@ -164,33 +164,35 @@ export const merchantOrderAPI = {
       throw error;
     }
   },
+  
+  getMediaFiles: async (fileId: string): Promise<Blob> => {
+    const endpoint = `${BACKEND_URL}/merchant/download/?fileId=${fileId}`;
+
+    try {
+      const response = await fetch(endpoint);
+
+      if (!response.ok) {
+        const errorDetail = await response.text();
+        throw new Error(`Failed to download file. Status: ${response.status}. Detail: ${errorDetail}`);
+      }
+
+      const res = await response.blob();
+      return res;
+
+    } catch (error) {
+      console.error("API Call Error in merchantOrderAPI.getMediaFiles:", error.message);
+      throw error;
+    }
+  },
 
   createOrder: async (order: Order): Promise<OrderResult> => {
     console.log("This is the order:", order)
     const endpoint = `${BACKEND_URL}/merchant/create-order`;
     const fileUploadEndPoint = `${BACKEND_URL}/merchant/upload`
 
-    // Helper function to convert Blob to base64 buffer string
-    // const blobToBase64 = (blob: Blob): Promise<string> => {
-    //   return new Promise((resolve, reject) => {
-    //     const reader = new FileReader();
-    //     reader.onloadend = () => {
-    //       const base64String = reader.result as string;
-    //       // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-    //       const base64Data = base64String.split(',')[1];
-    //       resolve(base64Data);
-    //     };
-    //     reader.onerror = reject;
-    //     reader.readAsDataURL(blob);
-    //   });
-    // };
-
     try {
       console.log(`Token Params from QR scan: ${order.orderId}`);
 
-      // Convert blobs to base64 buffers if present
-      // let imageBuffer: string | null = null;
-      // let audioBuffer: string | null = null;
       let imageFileId: string | null = null;
       let audioFileId: string | null = null;
 
@@ -235,14 +237,6 @@ export const merchantOrderAPI = {
         console.log("Audio Upload Result:", uploadResult)
         audioFileId = uploadResult.data.file_id;
       }
-      //   imageBuffer = await blobToBase64(order.imageBlob);
-      //   imageURL = URL.createObjectURL(order.imageBlob);
-      // }
-
-      // if (order.audioBlob) {
-      //   audioBuffer = await blobToBase64(order.audioBlob);
-      //   audioURL = URL.createObjectURL(order.audioBlob);
-
 
       // Build order payload with buffer data
       delete order.imageBlob

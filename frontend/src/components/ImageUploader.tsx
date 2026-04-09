@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
+
 
 interface ImageUploaderProps {
   existingImageBlob?: Blob;
@@ -13,6 +15,15 @@ export const ImageUploader = ({ existingImageBlob, onImageSelected }: ImageUploa
   );
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (existingImageBlob) {
+      const url = URL.createObjectURL(existingImageBlob);
+      setPreviewUrl(url);
+
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [existingImageBlob]);
 
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
