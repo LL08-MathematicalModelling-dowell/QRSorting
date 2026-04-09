@@ -4,13 +4,10 @@ import fs from 'fs';
 class Datacubeservices {
     constructor(apiKey) {
         this.apiKey = apiKey;
-        this.baseUrl = 'https://datacube.uxlivinglab.online/api';
-        // this.baseUrl = 'https://www.dowelldatacube.uxlivinglab.online/db_api';
+        this.baseUrl = process.env.VITE_DATACUBE_BASE_URL;
         this.headers = {
             Authorization: `Api-Key ${apiKey}`,
-            // "Authorization": `Api-Key ${apiKey}`,
             ContentType: "application/json"
-            // "Content-Type": "application/json"
         }
     }
 
@@ -99,12 +96,7 @@ class Datacubeservices {
 
     async createCollection(databaseId, collections) {
         const url = `${this.baseUrl}/add_collection/`;
-        //     {
-        // "collections": [{
-        //     "name":"LatIndex",
-        // "fields":[ {"name":"latitude","type":"number"}, {"name":"longitude","type":"number"}]
-        // }]
-        //   }
+       
         const payload = {
             database_id: databaseId,
             collections: collections
@@ -170,7 +162,6 @@ class Datacubeservices {
                 ...form.getHeaders()
             }
 
-
             const response = await axios.post(url, form, { headers });
 
             console.log("Upload Response:", response.data);
@@ -180,11 +171,11 @@ class Datacubeservices {
         }
     }
 
-    async fileDownload() {
+    async fileDownload(file_id) {
         try {
-            const url = `${this.baseUrl}/files/?page=1&page_size=10&search=report`;
-            const response = await axios.get(url, { responseType: 'arraybuffer' });
-            return response.data;
+            const url = `${this.baseUrl}/files/${file_id}/download/`;
+            const response = await axios.get(url, { headers: this.headers });
+            return response;
         } catch (error) {
             console.error("Download Error:", error.response?.data || error.message);
         }

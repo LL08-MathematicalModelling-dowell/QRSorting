@@ -15,27 +15,29 @@ const MerchantUniqueScan = () => {
 
    // Check for encrypted token in URL on mount
    useEffect(() => {
-     const token = searchParams.get('token');
+    console.log("Checking for encrypted token in URL...", searchParams.toString());
+    const id = searchParams.get('id');
+    console.log("Found token in URL:", id);
     
-     if (token) {
-       handleDecryptToken(token);
-     }
+    if (id) {
+      handleDecryptToken(id);
+    }
    }, [searchParams]);
 
-   const handleDecryptToken = async (encryptedToken: string) => {
+   const handleDecryptToken = async (encryptedId: string) => {
      setProcessing(true);
      setStatus('Decrypting order ID...');
 
      try {
-        console.log("This is the encrypted token:",encryptedToken)
-        const result = await merchantOrderAPI.decryptToken(encryptedToken);
+        console.log("This is the encrypted token:",encryptedId)
+        const result = await merchantOrderAPI.decryptToken(encryptedId);
         
         console.log("This is the decrypted token:",result)
 
-      if (result.success && result.decryptedToken) {
+      if (result.success && result.decryptedId) {
          setStatus('Checking order status...');
          
-        if (result.decryptedToken.qr_id == null) {
+        if (result.decryptedId.qr_id == null) {
           toast({
              title: 'No Order Found',
              description: `Incomplete QR code. Please check the QR code and try again.`,
@@ -45,7 +47,7 @@ const MerchantUniqueScan = () => {
           // Check if order exists
           // sessionStorage.setItem('qr_id', result.decryptedToken.qr_id);
           // sessionStorage.setItem('scan_id', result.decryptedToken.scan_id);
-          const decryptedOrderId = result.decryptedToken.qr_id.toLowerCase()
+          const decryptedOrderId = result.decryptedId.qr_id.toLowerCase()
           const existingOrder = await merchantOrderAPI.getOrder(decryptedOrderId);
         
           if (existingOrder.success) {
@@ -86,10 +88,10 @@ const MerchantUniqueScan = () => {
 
      // Extract token from URL if present
      try {
-       const token = new URL(scannedData).searchParams.get('token');
-       if (token) {
-        console.log("This is the token:",token)
-         handleDecryptToken(token);
+       const id = new URL(scannedData).searchParams.get('id');
+       if (id) {
+        console.log("This is the token:",id)
+         handleDecryptToken(id);
        } else {
          // Check if the scanned data itself is the token
          handleDecryptToken(scannedData);

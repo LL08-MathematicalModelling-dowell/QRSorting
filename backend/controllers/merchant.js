@@ -1,11 +1,10 @@
 import kafka from '../services/kafkaService.js';
 import Datacubeservices from '../services/datacubeServices.js';
 import { v4 as uuidv4 } from "uuid";
-import { timeStamp } from 'console';
 import QRCodeGenerator from '../services/qrcodeService.js';
 
 
-const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
+const datacube = new Datacubeservices(process.env.VITE_DATACUBE_API_KEY);
 
 async function sendtoKafka(data) {
     const producer = kafka.producer({
@@ -16,7 +15,6 @@ async function sendtoKafka(data) {
         topic: process.env.KAFKA_TOPIC,
         messages: [{
             "key": uuidv4(),
-            // "value": JSON.stringify({"name":"Exhibitor1","scans":"scans"})
             "value": JSON.stringify(data)
         }],
 
@@ -31,7 +29,6 @@ export async function createOrder(req, res) {
 
         let payload = {
             ...req.body,
-            // audioFile: req.file ? req.file.buffer : null,
             localtime: new Date().toISOString(),
             dataType: "newOrder",
         };
@@ -40,7 +37,7 @@ export async function createOrder(req, res) {
         try {
             await sendtoKafka(payload);
 
-            res.status(201).json({ success: true, message: "Order created successfully" });
+            res.status(200).json({ success: true, message: "Order sent for processing" });
         } catch (err) {
             console.error("❌ Failed to send order to Kafka", err);
             res.status(500).json({ error: "Failed to order" });
@@ -62,8 +59,6 @@ export async function getOrderDetails(req, res) {
         const results = await datacube.dataRetrieval(process.env.MASTER_DATABASE_ID, collId, JSON.stringify(filters));
         console.log(results)
         if (results.success && results.data.length > 0) {
-            const imageFileId = results.data[0].imageFileId;
-            const audioFileId = results.data[0].audioFileId;
             
             res.status(200).json({ success: true, message: "Retrieved order details successfully", orderDetails: results.data });
         } else {
@@ -148,4 +143,27 @@ export async function uploadFile(req, res) {
             error: error.message
         });
     }
+
 };
+
+export async function downloadFile(req, res) {
+    try {
+        const fileId = req.query.fileId;
+        const result = await datacube.fileDownload(fileId);
+        console.log(typeof result.data);
+        console.log(result.data.slice(0, 50));
+        const { buffer, mimeType, filename } = result;
+        console.log(buffer instanceof Buffer);
+
+        res.setHeader("Content-Type", mimeType);
+        res.setHeader("Content-Disposition", `inline; filename=${filename || "file"}`);
+
+        res.send(result.datae);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "File download failed",
+            error: error.message
+        });
+    }
+}

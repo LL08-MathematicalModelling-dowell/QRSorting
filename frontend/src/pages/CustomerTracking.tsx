@@ -34,7 +34,10 @@ const CustomerTracking = () => {
 
       console.log("Order data:", orderData);
       console.log("Scan data:", scanData);
-
+      
+      // const imageBlob = await merchantOrderAPI.getMediaFiles(orderData.imageFileId);
+      // orderData.imageBlob = imageBlob;
+    
       if (!orderData || !orderData.success) {
         setError('Order not found');
         setLoading(false);

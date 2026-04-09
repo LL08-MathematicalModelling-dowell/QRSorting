@@ -56,20 +56,47 @@ export const OrderDetailsCard = ({ order }: OrderDetailsCardProps) => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (order.imageBuffer && order.imageType) {
-      const url = base64ToUrl(order.imageBuffer, order.imageType);
-      setImageUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-  }, [order.imageBuffer, order.imageType]);
+  if (!order.imageFileId) return;
 
-  useEffect(() => {
-    if (order.audioBuffer && order.audioType) {
-      const url = base64ToUrl(order.audioBuffer, order.audioType);
-      setAudioUrl(url);
-      return () => URL.revokeObjectURL(url);
+  const fetchImage = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_DATACUBE_BASE_URL}/files/${order.imageFileId}/download/`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `${import.meta.env.VITE_DATACUBE_API_KEY}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch image");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      setImageUrl(url);
+    } catch (err) {
+      console.error("Image fetch error:", err);
     }
-  }, [order.audioBuffer, order.audioType]);
+  };
+
+  fetchImage();
+
+  return () => {
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+  };
+}, [order.imageFileId]);
+
+  // useEffect(() => {
+  //   if (order.audioBuffer && order.audioType) {
+  //     const url = base64ToUrl(order.audioBuffer, order.audioType);
+  //     setAudioUrl(url);
+  //     return () => URL.revokeObjectURL(url);
+  //   }
+  // }, [order.audioBuffer, order.audioType]);
 
   return (
     <motion.div
