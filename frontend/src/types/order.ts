@@ -89,5 +89,14 @@ export interface OrderUpdate {
   status: string,
   estimatedDelivery?: string
 }
+ export interface FileData {
+  filename: string;
+  content_type: string;
+  signed_url: string;
+}
+export interface FileDownloadResult {
+  success: boolean;
+  data: FileData | null;
+}
 
 export type UserRole = 'merchant' | 'delivery' | 'customer';

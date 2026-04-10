@@ -150,15 +150,16 @@ export async function downloadFile(req, res) {
     try {
         const fileId = req.query.fileId;
         const result = await datacube.fileDownload(fileId);
-        console.log(typeof result.data);
-        console.log(result.data.slice(0, 50));
-        const { buffer, mimeType, filename } = result;
-        console.log(buffer instanceof Buffer);
-
-        res.setHeader("Content-Type", mimeType);
-        res.setHeader("Content-Disposition", `inline; filename=${filename || "file"}`);
-
-        res.send(result.datae);
+        console.log("File download result:", result);
+        const fileData = {
+            filename: result.info["filename"],
+            content_type: result.info["content-type"],
+            signed_url: result.info["signed_url"]
+        }
+        res.status(200).json({
+            success: true,
+            data: fileData
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
