@@ -23,20 +23,20 @@ const DeliveryScan = () => {
   const [status, setStatus] = useState<string>('');
 
   const handleScanSuccess = async(scannedData: string) => {
-    const token = new URL(scannedData).searchParams.get('token');
-    console.log("This is the token:",token)
+    const id = new URL(scannedData).searchParams.get('id');
+    console.log("This is the ID:",id)
 
-    if (token) {
+    if (id) {
       setProcessing(true);
       setStatus('Decrypting order ID...');
 
       try {
-          const result = await merchantOrderAPI.decryptToken(token);
+          const result = await merchantOrderAPI.decryptToken(id);
           console.log("This is the decrypted token:",result)
 
-        if (result.success && result.decryptedToken) {
+        if (result.success && result.decryptedId) {
           setStatus('Checking order status...');
-          const orderId = result.decryptedToken.qr_id;
+          const orderId = result.decryptedId.qr_id;
           if (!orderId.trim()) {
             toast({
                 title: 'Order ID not found',
@@ -79,7 +79,7 @@ const DeliveryScan = () => {
     if (existingOrder.success) {
       toast({
         title: 'Order Found',
-        description: `Proceeding to capture location for order #${orderId}`,
+        description: `Proceeding to capture location for order`,
       });
       navigate(`/order/delivery/${orderId.trim()}`);
     } else {

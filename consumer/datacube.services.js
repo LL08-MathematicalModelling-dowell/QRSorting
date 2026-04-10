@@ -3,14 +3,12 @@ import axios from 'axios';
 class Datacubeservices {
     constructor(apiKey) {
         this.apiKey = apiKey;
-        this.baseUrl = 'https://datacube.uxlivinglab.online/api';
-        // this.baseUrl = 'https://www.dowelldatacube.uxlivinglab.online/db_api';
+        this.baseUrl = process.env.VITE_DATACUBE_BASE_URL;
         this.headers = {
         Authorization: `Api-Key ${apiKey}`,
         ContentType: "application/json"
         }
     }
-
     async dbCreation(dbName, collections) {
         const url = `${this.baseUrl}/create_database`;
         

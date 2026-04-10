@@ -3,7 +3,7 @@ import Datacubeservices from '../services/datacubeServices.js';
 import { v4 as uuidv4 } from "uuid";
 import { formatDate } from '../utils/helper.js';
 
-const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
+const datacube = new Datacubeservices(process.env.VITE_DATACUBE_API_KEY);
 
 async function sendtoKafka(data) {
     const producer = kafka.producer();
@@ -33,7 +33,7 @@ export async function createScan(req, res) {
 export async function getScansForDate(req, res) {
     
     try {
-        const orderId = req.query.orderId;
+        const orderId = req.query.orderId.toLowerCase();
         const datetime = new Date(req.query.date)
         const collId = formatDate(datetime)
         const filters = {"orderId": orderId};

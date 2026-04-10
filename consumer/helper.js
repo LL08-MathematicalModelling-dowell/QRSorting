@@ -1,7 +1,6 @@
 import Datacubeservices from "./datacube.services.js"; 
 
-const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
-
+const datacube = new Datacubeservices(process.env.VITE_DATACUBE_API_KEY);
 
 const saveOrderDetails = async (data) => {
     
@@ -33,7 +32,7 @@ function formatDate(date) {
 const saveScans = async (data) => {
     
     delete data.dataType
-
+    data.orderId = (data.orderId).toLowerCase();
     const dbID = process.env.SCAN_DATABASE_ID
     const datetime = new Date(data.scannedAt)
     const collId = formatDate(datetime)
@@ -50,11 +49,9 @@ const saveScans = async (data) => {
 }
 
 const saveMerchantDetails = async (data) => {
-    
+    console.log("This is the merchant data to be saved:", data)
     delete data.dataType
 
-    const dbID = process.env.MASTER_DATABASE_ID
-    
     const response = await datacube.dataInsertion(process.env.MASTER_DATABASE_ID, process.env.MERCHANT_COLL, data);
     if (response.success) {
         console.log('Merchant Details inserted successfully in datacube:', response);
