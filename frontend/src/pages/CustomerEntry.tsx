@@ -49,7 +49,7 @@ const CustomerEntry = () => {
     } else {
       toast({
         title: 'Order Not Found',
-        description: `Could not find your order". Please check the Order ID and try again.`,
+        description: `Could not find your order. Please check the Order ID and try again.`,
         variant: 'destructive',
       });
     }
@@ -62,10 +62,7 @@ const CustomerEntry = () => {
     setStatus('Decrypting order ID...');
 
     try {
-       console.log("This is the encrypted Id:",encryptedId)
        const result = await merchantOrderAPI.decryptToken(encryptedId);
-       
-       console.log("This is the decrypted Id:",result)
 
      if (result.success && result.decryptedId){
         setStatus('Checking order status...');
@@ -78,7 +75,6 @@ const CustomerEntry = () => {
           navigate(`/order/`);
         } else {
           handleCheckOrder(orderId);
-          // sessionStorage.setItem('scan_id', result.decryptedToken.scan_id);
         }
      }
     } catch (error) {

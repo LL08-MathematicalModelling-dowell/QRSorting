@@ -3,6 +3,7 @@ import { Store, Ruler, MapPin, Phone, User, FileText, ChevronDown, ChevronUp, Im
 import { useEffect,useState } from 'react';
 import { Order, OrderItem } from '@/types/order';
 import { base64ToUrl } from '@/lib/utils';
+import { merchantOrderAPI } from '@/lib/api';
 
 interface OrderDetailsCardProps {
   order: Order;
@@ -55,48 +56,41 @@ export const OrderDetailsCard = ({ order }: OrderDetailsCardProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-  if (!order.imageFileId) return;
-
-  const fetchImage = async () => {
+  useEffect(() =>{
+    const fetchImage = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_DATACUBE_BASE_URL}/files/${order.imageFileId}/download/`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `${import.meta.env.VITE_DATACUBE_API_KEY}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch image");
+      if (order.imageFileId) {
+        const file = await merchantOrderAPI.getMediaFiles(order.imageFileId);
+        // console.log("File fetch result for image:", file);
+        const signedUrl = file.data.signed_url;
+        const url = `${import.meta.env.VITE_DATACUBE_DOMAIN}${signedUrl}`;
+        setImageUrl(url);
       }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-
-      setImageUrl(url);
-    } catch (err) {
-      console.error("Image fetch error:", err);
+    } catch (error) {
+      console.error("Error fetching image:", error);
     }
   };
 
   fetchImage();
-
-  return () => {
-    if (imageUrl) URL.revokeObjectURL(imageUrl);
-  };
 }, [order.imageFileId]);
 
-  // useEffect(() => {
-  //   if (order.audioBuffer && order.audioType) {
-  //     const url = base64ToUrl(order.audioBuffer, order.audioType);
-  //     setAudioUrl(url);
-  //     return () => URL.revokeObjectURL(url);
-  //   }
-  // }, [order.audioBuffer, order.audioType]);
+useEffect(() =>{
+    const fetchAudio = async () => {
+    try {
+      if (order.audioFileId) {
+        const file = await merchantOrderAPI.getMediaFiles(order.audioFileId);
+        // console.log("File fetch result for audio:", file);
+        const signedUrl = file.data.signed_url;
+        const url = `${import.meta.env.VITE_DATACUBE_DOMAIN}${signedUrl}`;
+        setAudioUrl(url);
+      }
+    } catch (error) {
+      console.error("Error fetching audio:", error);
+    }
+  };
+
+  fetchAudio();
+}, [order.audioFileId]);
 
   return (
     <motion.div

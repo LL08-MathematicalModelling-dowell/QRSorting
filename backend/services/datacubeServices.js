@@ -173,9 +173,9 @@ class Datacubeservices {
 
     async fileDownload(file_id) {
         try {
-            const url = `${this.baseUrl}/files/${file_id}/download/`;
+            const url = `${this.baseUrl}/files/${file_id}/`;
             const response = await axios.get(url, { headers: this.headers });
-            return response;
+            return response.data;
         } catch (error) {
             console.error("Download Error:", error.response?.data || error.message);
         }

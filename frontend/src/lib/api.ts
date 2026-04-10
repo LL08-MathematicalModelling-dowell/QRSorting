@@ -1,4 +1,4 @@
-import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult } from "@/types/order";
+import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult, FileDownloadResult } from "@/types/order";
 
 const BACKEND_URL = '/api/v1';
 export const adminAPI = {
@@ -76,7 +76,7 @@ export const merchantOrderAPI = {
     const endpoint = `${BACKEND_URL}/admin/decrypt`;
 
     try {
-      console.log('Decrypting token:', encryptedId);
+      console.log('Decrypting token...');
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -110,12 +110,10 @@ export const merchantOrderAPI = {
     }
   },
   getOrder: async (orderId: string): Promise<Order> => {
-    console.log(`Fetching order: ${orderId}`);
+    console.log(`Fetching order...`);
     const endpoint = `${BACKEND_URL}/merchant/get-order/?orderId=${orderId}`;
 
     try {
-      console.log(`Token Params from QR scan: ${orderId}`);
-
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
@@ -138,7 +136,7 @@ export const merchantOrderAPI = {
 
       const res = await response.json();
       const orderDetails = res.orderDetails[0]
-      console.log(orderDetails)
+      // console.log(orderDetails)
       const result: Order = {
         success: res.success,
         orderId: orderDetails.orderId,
@@ -165,7 +163,7 @@ export const merchantOrderAPI = {
     }
   },
   
-  getMediaFiles: async (fileId: string): Promise<Blob> => {
+  getMediaFiles: async (fileId: string): Promise<FileDownloadResult> => {
     const endpoint = `${BACKEND_URL}/merchant/download/?fileId=${fileId}`;
 
     try {
@@ -175,8 +173,8 @@ export const merchantOrderAPI = {
         const errorDetail = await response.text();
         throw new Error(`Failed to download file. Status: ${response.status}. Detail: ${errorDetail}`);
       }
-
-      const res = await response.blob();
+      const res = await response.json();
+      console.log("File download response:", res);
       return res;
 
     } catch (error) {
@@ -186,7 +184,7 @@ export const merchantOrderAPI = {
   },
 
   createOrder: async (order: Order): Promise<OrderResult> => {
-    console.log("This is the order:", order)
+    // console.log("This is the order:", order)
     const endpoint = `${BACKEND_URL}/merchant/create-order`;
     const fileUploadEndPoint = `${BACKEND_URL}/merchant/upload`
 
