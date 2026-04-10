@@ -6,10 +6,11 @@ import { useEffect } from 'react';
 
 interface ImageUploaderProps {
   existingImageBlob?: Blob;
+  imageUrl?: string;
   onImageSelected: (blob: Blob | null) => void;
 }
 
-export const ImageUploader = ({ existingImageBlob, onImageSelected }: ImageUploaderProps) => {
+export const ImageUploader = ({ existingImageBlob, imageUrl, onImageSelected }: ImageUploaderProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     existingImageBlob ? URL.createObjectURL(existingImageBlob) : null
   );
@@ -19,11 +20,12 @@ export const ImageUploader = ({ existingImageBlob, onImageSelected }: ImageUploa
   useEffect(() => {
     if (existingImageBlob) {
       const url = URL.createObjectURL(existingImageBlob);
-      setPreviewUrl(url);
-
+      setPreviewUrl(url)
       return () => URL.revokeObjectURL(url);
-    }
-  }, [existingImageBlob]);
+    } else if (imageUrl) {
+    setPreviewUrl(imageUrl); // ✅ use backend URL
+  }
+}, [existingImageBlob, imageUrl]);
 
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {

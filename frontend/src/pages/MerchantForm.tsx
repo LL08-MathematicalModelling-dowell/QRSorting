@@ -13,7 +13,6 @@ import { ImageUploader } from '@/components/ImageUploader';
 import { OrderStatus, OrderItem, GarmentSpecification, Order, OrderUpdate } from '@/types/order';
 import { toast } from '@/hooks/use-toast';
 import { merchantOrderAPI } from '@/lib/api';
-import { base64ToBlob } from '@/lib/utils';
 
 const statusOptions: { value: OrderStatus; label: string }[] = [
   { value: 'pending', label: 'Pending' },
@@ -35,6 +34,11 @@ const MerchantForm = () => {
   // Determine if this is a create or update based on route
   const isCreateRoute = location.pathname.startsWith('/order/merchant/create/');
   const [isNewOrder, setIsNewOrder] = useState(isCreateRoute);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [imageBlob, setImageBlob] = useState<Blob | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
   
   const [formData, setFormData] = useState({
     merchantName: '',
@@ -55,9 +59,7 @@ const MerchantForm = () => {
     imageBlob: undefined
   });
 
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [imageBlob, setImageBlob] = useState<Blob | null>(null);
-
+  
   useEffect(() => {
     const fetchOrder = async () => {
 
@@ -72,24 +74,21 @@ const MerchantForm = () => {
     if (orderId) {
       const order = await merchantOrderAPI.getOrder(orderId);
       if (order.success) {
-        console.log("AUDIO :", order.audioFileId, order.audioType);
-        console.log("IMAGE :", order.imageFileId, order.imageType);
-        // if (order.audioFileId) {
-        //   const audioRaw = await merchantOrderAPI.getMediaFiles(order.audioFileId);
-        //   const audioBlob = new Blob([audioRaw], { type: 'audio/mpeg' });
-        //   console.log("AUDIO BLOB:", audioRaw);
-        //   setAudioBlob(audioBlob);
-        // }
+        if (order.imageFileId) {
+          const file = await merchantOrderAPI.getMediaFiles(order.imageFileId);
+          // console.log("File fetch result for image:", file);
+          const signedUrl = file.data.signed_url;
+          const url = `${import.meta.env.VITE_DATACUBE_DOMAIN}${signedUrl}`;
+          setImageUrl(url);
+        }
 
-        // if (order.imageFileId ) {
-        //   const imageRaw = await merchantOrderAPI.getMediaFiles(order.imageFileId);
-        //   console.log("IMAGE RAW:", imageRaw);
-        //   const text = await imageRaw.text();
-        //   console.log("HTML RESPONSE:", text);
-        //   // const imageBlob = new Blob([imageRaw], { type: 'image/jpeg' });
-        //   // console.log("IMAGE BLOB:", imageRaw);
-        //   setImageBlob(imageRaw);
-        // }
+        if (order.audioFileId) {
+          const file = await merchantOrderAPI.getMediaFiles(order.audioFileId);
+          // console.log("File fetch result for audio:", file);
+          const signedUrl = file.data.signed_url;
+          const url = `${import.meta.env.VITE_DATACUBE_DOMAIN}${signedUrl}`;
+          setAudioUrl(url);
+        }
 
         setFormData({
           merchantName: sessionStorage.getItem("businessName"),
@@ -615,6 +614,7 @@ const MerchantForm = () => {
                   <Label className="mb-2 block">Garment Sample Image (Optional)</Label>
                   <ImageUploader
                     existingImageBlob={imageBlob || undefined}
+                    imageUrl={imageUrl || undefined}
                     onImageSelected={setImageBlob}
                   />
                 </div>
@@ -622,7 +622,9 @@ const MerchantForm = () => {
                   <Label className="mb-2 block">Voice Note (Optional)</Label>
                   <AudioRecorder
                     existingAudioBlob={audioBlob || undefined}
+                    audioUrl={audioUrl || undefined}
                     onAudioRecorded={setAudioBlob}
+                    isEditable={isNewOrder}
                   />
                 </div>
                 

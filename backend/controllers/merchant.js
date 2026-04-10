@@ -150,7 +150,7 @@ export async function downloadFile(req, res) {
     try {
         const fileId = req.query.fileId;
         const result = await datacube.fileDownload(fileId);
-        console.log("File download result:", result);
+        // console.log("File download result:", result);
         const fileData = {
             filename: result.info["filename"],
             content_type: result.info["content-type"],

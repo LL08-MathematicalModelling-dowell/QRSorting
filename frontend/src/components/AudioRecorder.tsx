@@ -5,16 +5,20 @@ import { toast } from '@/hooks/use-toast';
 
 interface AudioRecorderProps {
   existingAudioBlob?: Blob;
+  audioUrl?: string;
   onAudioRecorded: (blob: Blob | null) => void;
+  isEditable?: boolean;
 }
 
 export const AudioRecorder = ({ 
-  existingAudioBlob, 
-  onAudioRecorded 
+  existingAudioBlob,
+  audioUrl, 
+  onAudioRecorded,
+  isEditable = true 
 }: AudioRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(existingAudioBlob || null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -25,14 +29,15 @@ export const AudioRecorder = ({
   useEffect(() => {
     if (audioBlob) {
       const url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url);
+      setAudioSrc(url);
       return () => URL.revokeObjectURL(url);
-    } else {
-      setAudioUrl(null);
+    } else if (audioUrl) {
+      setAudioSrc(audioUrl);
     }
-  }, [audioBlob]);
+  }, [audioBlob, audioUrl]);
 
   const startRecording = useCallback(async () => {
+    if (!isEditable) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -74,7 +79,7 @@ export const AudioRecorder = ({
   }, [isRecording]);
 
   const togglePlayback = useCallback(() => {
-    if (!audioRef.current || !audioUrl) return;
+    if (!audioRef.current || !audioSrc) return;
 
     if (isPlaying) {
       audioRef.current.pause();
@@ -82,7 +87,7 @@ export const AudioRecorder = ({
       audioRef.current.play();
     }
     setIsPlaying(!isPlaying);
-  }, [isPlaying, audioUrl]);
+  }, [isPlaying, audioSrc]);
 
   const handleAudioEnded = useCallback(() => {
     setIsPlaying(false);
@@ -91,8 +96,10 @@ export const AudioRecorder = ({
   const removeAudio = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.load();
     }
     setAudioBlob(null);
+    setAudioSrc(null);
     setIsPlaying(false);
     onAudioRecorded(null);
   }, [onAudioRecorded]);
@@ -100,7 +107,7 @@ export const AudioRecorder = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 flex-wrap">
-        {!isRecording && !audioBlob && (
+        {isEditable &&!isRecording && !audioBlob && !audioSrc && (
           <Button
             type="button"
             variant="outline"
@@ -126,7 +133,7 @@ export const AudioRecorder = ({
           </Button>
         )}
 
-        {audioBlob && !isRecording && (
+        {(audioBlob || audioSrc) && !isRecording && (
           <>
             <Button
               type="button"
@@ -157,10 +164,10 @@ export const AudioRecorder = ({
         )}
       </div>
 
-      {audioUrl && (
+      {audioSrc && (
         <audio
           ref={audioRef}
-          src={audioUrl}
+          src={audioSrc}
           onEnded={handleAudioEnded}
           className="hidden"
         />
