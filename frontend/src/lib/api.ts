@@ -174,7 +174,7 @@ export const merchantOrderAPI = {
         throw new Error(`Failed to download file. Status: ${response.status}. Detail: ${errorDetail}`);
       }
       const res = await response.json();
-      console.log("File download response:", res);
+      // console.log("File download response:", res);
       return res;
 
     } catch (error) {
