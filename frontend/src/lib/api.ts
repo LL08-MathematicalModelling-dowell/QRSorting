@@ -386,5 +386,31 @@ export const scanAPI = {
       console.error("API Call Error in scanAPI.getScans:", error);
       throw error;
     }
+  },
+
+  getLocationAddress: async (lat: number, lon: number): Promise<{ success: boolean; address?: string; message?: string }> => {
+    
+    const endpoint = `${import.meta.env.VITE_NOMINATIM_API}?lat=${lat}&lon=${lon}&format=json`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch location address. Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const address = data.display_name;
+
+      return { success: true, address, message: "Location address fetched successfully" };
+    } catch (error) {
+      console.error("API Call Error in scanAPI.getLocationAddress:", error);
+      throw error;
+    }
   }
 };
