@@ -26,12 +26,13 @@ const statusOptions: { value: OrderStatus; label: string }[] = [
 
 const DeliveryScanner = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  console.log("Order ID:", orderId);
+  // console.log("Order ID:", orderId);
   const navigate = useNavigate();
   const [locationState, setLocationState] = useState<LocationState>('idle');
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>('in_transit');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [nominatimResult, setNominatimResult] = useState<{ address: string } | null>(null);
   const [orderExists, setOrderExists] = useState<boolean | null>(null);
   
   // Check if order exists on mount
@@ -78,9 +79,12 @@ const DeliveryScanner = () => {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         setCoordinates({ lat: latitude, lng: longitude });
+        const nominatimResult = await scanAPI.getLocationAddress(latitude, longitude);
+        // console.log('Nominatim Result:', nominatimResult);
+        setNominatimResult({ address: nominatimResult.address });
         setLocationState('previewing');  
       },
       (error) => {
@@ -126,7 +130,7 @@ const DeliveryScanner = () => {
     };
 
     const scanResult = await scanAPI.insertScan(scan);
-    console.log(scanResult);
+    // console.log(scanResult);
 
     if (scanResult.success) {
       setLocationState('success');
@@ -281,7 +285,7 @@ const DeliveryScanner = () => {
                   <div className="flex items-center gap-2 text-sm">
                     <Navigation className="w-4 h-4 text-delivery" />
                     <span className="font-mono">
-                      {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+                      {nominatimResult?.address || `${coordinates.lat.toFixed(6)}, ${coordinates.lng.toFixed(6)}`}
                     </span>
                   </div>
                 </div>
@@ -352,7 +356,7 @@ const DeliveryScanner = () => {
                 <div className="flex items-center gap-2 text-sm">
                   <Navigation className="w-4 h-4 text-delivery" />
                   <span className="font-mono">
-                    {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+                    {nominatimResult?.address || `${coordinates.lat.toFixed(6)}, ${coordinates.lng.toFixed(6)}`}
                   </span>
                 </div>
               </div>
