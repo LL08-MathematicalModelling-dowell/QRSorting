@@ -14,7 +14,7 @@ type TextTemplate = 'common' | 'unique';
 const MerchantLanding = () => {
   const navigate = useNavigate();
   const [category, setCategory] = useState<TemplateCategory>('text');
-  const [textTemplate, setTextTemplate] = useState<TextTemplate>('common');
+  const [textTemplate, setTextTemplate] = useState<TextTemplate>('unique');
 
   const handleContinue = () => {
     if (category === 'text') {
@@ -72,17 +72,31 @@ const MerchantLanding = () => {
                 >
                   <div 
                     className="flex items-start space-x-3 rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-                    onClick={() => setTextTemplate('common')}
+                    // onClick={() => setTextTemplate('common')}
                   >
-                    <RadioGroupItem value="common" id="common" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="common" className="flex items-center gap-2 cursor-pointer font-medium">
-                        <QrCode className="h-4 w-4 text-merchant" />
-                        Common QR Code
-                      </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Scan any QR code or manually enter the order ID to create or update orders.
-                      </p>
+                    <div 
+                      className="flex items-start space-x-3 rounded-lg border p-4 opacity-50 pointer-events-none select-none"
+                    >
+                      <RadioGroupItem 
+                        value="common" 
+                        id="common" 
+                        className="mt-1"
+                        disabled
+                      />
+
+                      <div className="flex-1">
+                        <Label 
+                          htmlFor="common" 
+                          className="flex items-center gap-2 font-medium"
+                        >
+                          <QrCode className="h-4 w-4 text-merchant" />
+                          Common QR Code
+                        </Label>
+
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Scan any QR code or manually enter the order ID to create or update orders.
+                        </p>
+                      </div>
                     </div>
                   </div>
 

@@ -84,7 +84,7 @@ const formatDate = function(date) {
   }
 
 const decryptPayload = async function(id) {
-  const res = await fetch(process.env.QR_DECRYTION_API_URL+id, {
+  const res = await fetch(process.env.QR_DECRYPTION_API_URL+id, {
     method: "GET",
     headers: {
       "Content-Type": "application/json"
