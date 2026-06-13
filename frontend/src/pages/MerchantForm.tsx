@@ -490,7 +490,12 @@ const MerchantForm = () => {
                             type="number"
                             min="1"
                             value={item.quantity}
-                            onChange={(e) => updateItem(itemIndex, 'quantity', parseInt(e.target.value) || 1)}
+                            onChange={(e) => updateItem(itemIndex, 'quantity', parseInt(e.target.value))}
+                            onBlur={(e) => {
+                              const value = parseInt(e.target.value,10);
+                              updateItem(itemIndex, 'quantity', !isNaN(value) && value > 0 ? value : 1);
+                              }
+                          }
                           />
                         </div>
                         <div>
@@ -499,7 +504,11 @@ const MerchantForm = () => {
                             type="number"
                             min="1"
                             value={item.price}
-                            onChange={(e) => updateItem(itemIndex, 'price', parseFloat(e.target.value) || 0)}
+                            onChange={(e) => updateItem(itemIndex, 'price', parseFloat(e.target.value))}
+                            onBlur={(e) => {
+                              const value = parseFloat(e.target.value);
+                              updateItem(itemIndex, 'price', !isNaN(value) && value >= 0 ? value : 0);
+                              }}
                           />
                         </div>
                       </div>
