@@ -99,4 +99,11 @@ export interface FileDownloadResult {
   data: FileData | null;
 }
 
+export interface FeedbackResult {
+  success: boolean;
+  message: string;
+  feedback: any;
+}
+
+
 export type UserRole = 'merchant' | 'delivery' | 'customer';
