@@ -14,6 +14,8 @@ import CustomerTracking from "./pages/CustomerTracking";
 import DeliveryScan from "./pages/DeliveryScan";
 import DeliveryScanner from "./pages/DeliveryScanner";
 import NotFound from "./pages/NotFound";
+import HotelFeedbackReport from "./pages/HotelFeedbackReport";
+import RoomOverviewDashboard from "./pages/RoomOverviewDashboard";
 
 const queryClient = new QueryClient();
 
@@ -40,7 +42,11 @@ const App = () => (
           {/* Delivery agent routes */}
           <Route path="/order/delivery" element={<DeliveryScan />} />
           <Route path="/order/delivery/:orderId" element={<DeliveryScanner />} />
-          
+
+          {/* Hotel Feedback Report route */}
+          <Route path="/hotel-feedback/" element={<HotelFeedbackReport />} />
+          <Route path="/room-overview" element={<RoomOverviewDashboard />} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

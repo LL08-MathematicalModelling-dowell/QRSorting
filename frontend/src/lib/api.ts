@@ -1,4 +1,4 @@
-import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult, FileDownloadResult } from "@/types/order";
+import { Order, OrderResult, OrderUpdate, ScanningUpdate, ScanResult, FileDownloadResult, FeedbackResult } from "@/types/order";
 
 const BACKEND_URL = '/api/v1';
 export const adminAPI = {
@@ -415,3 +415,34 @@ export const scanAPI = {
     }
   }
 };
+
+export const feedbackAPI = {
+  getFeedbacks: async (qrId: string): Promise<FeedbackResult> => {
+    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks/?qrId=${qrId}`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch feedbacks. Status: ${response.status}`);
+      }
+
+      const res = await response.json();
+
+      const result: FeedbackResult = {
+        success: res.success,
+        message: res.message,
+        feedback: res.feedbacks
+      };
+      return result;
+    } catch (error) {
+      console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
+      throw error;
+    }
+  }
+}
