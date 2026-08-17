@@ -16,6 +16,7 @@ import DeliveryScanner from "./pages/DeliveryScanner";
 import NotFound from "./pages/NotFound";
 import HotelFeedbackReport from "./pages/HotelFeedbackReport";
 import RoomOverviewDashboard from "./pages/RoomOverviewDashboard";
+import RoomOverviewDashboard2 from "./pages/RoomOverviewDashboard2";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
           {/* Hotel Feedback Report route */}
           <Route path="/hotel-feedback/" element={<HotelFeedbackReport />} />
           <Route path="/room-overview" element={<RoomOverviewDashboard />} />
+          <Route path="/room-overview-dummy" element={<RoomOverviewDashboard2 />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

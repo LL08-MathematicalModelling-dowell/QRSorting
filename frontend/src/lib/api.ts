@@ -417,8 +417,8 @@ export const scanAPI = {
 };
 
 export const feedbackAPI = {
-  getFeedbacks: async (qrId: string): Promise<FeedbackResult> => {
-    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks/?qrId=${qrId}`;
+  getFeedbacks: async (qrId: string, date: string): Promise<FeedbackResult> => {
+    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks/?qrId=${qrId}&date=${date}`;
 
     try {
       const response = await fetch(endpoint, {
@@ -437,7 +437,36 @@ export const feedbackAPI = {
       const result: FeedbackResult = {
         success: res.success,
         message: res.message,
-        feedback: res.feedbacks
+        feedbacks: res.feedbacks
+      };
+      return result;
+    } catch (error) {
+      console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
+      throw error;
+    }
+  },
+
+  fetchQRCodeDetails: async (clientName: string): Promise<FeedbackResult> => {
+    const endpoint = `${BACKEND_URL}/feedback/get-qr-code-details/?clientName=${clientName}`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch feedbacks. Status: ${response.status}`);
+      }
+
+      const res = await response.json();
+
+      const result: FeedbackResult = {
+        success: res.success,
+        message: res.message,
+        feedbacks: res.QRCodeDetails
       };
       return result;
     } catch (error) {
