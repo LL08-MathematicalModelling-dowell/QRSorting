@@ -102,7 +102,7 @@ export interface FileDownloadResult {
 export interface FeedbackResult {
   success: boolean;
   message: string;
-  feedback: any;
+  feedbacks: any;
 }
 
 
