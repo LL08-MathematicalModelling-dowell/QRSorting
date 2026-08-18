@@ -346,11 +346,14 @@ import React, { useEffect, useState } from 'react';
 import { Building2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { feedbackAPI } from '@/lib/api';
+import { useSearchParams } from 'react-router-dom';
 
 const RoomOverviewDashboard = () => {
   const [roomsData, setRoomsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchParams] = useSearchParams();
+  const clientName = searchParams.get('client');
 
   const navigate = useNavigate();
 
@@ -359,7 +362,7 @@ const RoomOverviewDashboard = () => {
       try {
         setLoading(true);
 
-        const response = await feedbackAPI.fetchQRCodeDetails("marriot_international");
+        const response = await feedbackAPI.fetchQRCodeDetails(clientName);
 
         console.log("Fetched QR code data:", response);
 
@@ -376,17 +379,6 @@ const RoomOverviewDashboard = () => {
   }, []);
 
   const handleCardClick = (qrCode) => {
-    /*
-      Your QR code has:
-        sequence_number: 1000
-        target_url: "...feedback?id=1000"
-
-      Your HotelFeedbackReport route is:
-        /hotel-feedback/:id
-
-      Therefore we navigate to:
-        /hotel-feedback/1000
-    */
     navigate(`/hotel-feedback/?id=${qrCode.sequence_number}`);
   };
 
