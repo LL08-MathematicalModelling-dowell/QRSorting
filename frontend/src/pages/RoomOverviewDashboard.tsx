@@ -423,7 +423,7 @@ const RoomOverviewDashboard = () => {
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900">
-              QR Code Overview
+              Guest Experience Dashboard
             </h1>
 
             <p className="text-sm text-gray-500 mt-1">

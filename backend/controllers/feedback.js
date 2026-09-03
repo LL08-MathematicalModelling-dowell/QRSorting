@@ -3,12 +3,13 @@ import Datacubeservices from '../services/datacubeServices.js';
 const datacube = new Datacubeservices(process.env.VITE_DATACUBE_API_KEY);
 const feedbackDatabase = new Datacubeservices(process.env.FEEDBACK_API_KEY);
 
-export async function getFeedbacks(req, res) {
+export async function getFeedbacksByDate(req, res) {
 
     try {
         console.log("This is the query:", req.query)
         const qrId = req.query.qrId.toLowerCase();
         const date = req.query.date;
+        // const clientName = req.query.clientName.toLowerCase();
         const collId = qrId.slice(-4)
         const filters = {"type": "feedback", "submitted_at": {"$gte": date + "T00:00:00.000Z", "$lte": date + "T23:59:59.999Z"}};
         console.log("Filters:", filters);

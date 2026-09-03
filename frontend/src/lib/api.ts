@@ -417,8 +417,8 @@ export const scanAPI = {
 };
 
 export const feedbackAPI = {
-  getFeedbacks: async (qrId: string, date: string): Promise<FeedbackResult> => {
-    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks/?qrId=${qrId}&date=${date}`;
+  getFeedbacksByDate: async (qrId: string, date: string, clientName: string): Promise<FeedbackResult> => {
+    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks-by-date/?qrId=${qrId}&date=${date}`;
 
     try {
       const response = await fetch(endpoint, {
@@ -473,5 +473,30 @@ export const feedbackAPI = {
       console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
       throw error;
     }
+  },
+
+  translateToEnglish: async (text: string): Promise<{ success: boolean; data?: any}> => {
+    const endpoint = "http://localhost:8004/api/text-analysis/translate-to-english/";
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: text }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to translate text. Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("API Call Error in feedbackAPI.translateToEnglish:", error);
+      throw error;
+    }
   }
-}
+
+};
