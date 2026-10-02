@@ -441,7 +441,7 @@ export const feedbackAPI = {
       };
       return result;
     } catch (error) {
-      console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
+      console.error("API Call Error in productFeedbackAPI.getProductFeedbacks:", error);
       throw error;
     }
   },
@@ -475,8 +475,8 @@ export const feedbackAPI = {
     }
   },
 
-  translateToEnglish: async (text: string): Promise<{ success: boolean; data?: any}> => {
-    const endpoint = "http://localhost:8004/api/text-analysis/translate-to-english/";
+  translateText: async (text: string, targetLanguage: string): Promise<{ success: boolean; data?: any}> => {
+    const endpoint = import.meta.env.VITE_TEXT_TRANSLATION_API;
 
     try {
       const response = await fetch(endpoint, {
@@ -484,7 +484,7 @@ export const feedbackAPI = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text: text }),
+        body: JSON.stringify({ text: text, target_language: targetLanguage }),
       });
 
       if (!response.ok) {
@@ -494,9 +494,41 @@ export const feedbackAPI = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error("API Call Error in feedbackAPI.translateToEnglish:", error);
+      console.error("API Call Error in facilityAPI.translateText:", error);
       throw error;
     }
   }
+};
 
+// PRODUCT FEEDBACKS ENDPOINTS
+
+export const productFeedbackAPI = {
+  getProductFeedbacks: async (qrId: string): Promise<FeedbackResult> => {
+    const endpoint = `${BACKEND_URL}/feedback/get-product-feedbacks/?qrId=${qrId}`;  
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch feedbacks. Status: ${response.status}`);
+      }
+
+      const res = await response.json();
+
+      const result: FeedbackResult = {
+        success: res.success,
+        message: res.message,
+        feedbacks: res.feedbacks
+      };
+      return result;
+    } catch (error) {
+      console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
+      throw error;
+    }
+  }
 };

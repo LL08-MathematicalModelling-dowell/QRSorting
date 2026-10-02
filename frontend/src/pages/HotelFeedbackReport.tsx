@@ -96,7 +96,7 @@ const ReportDashboard = () => {
 
     try {
       setTranslating((prev) => ({ ...prev, [feedback._id]: true }));
-      const response = await feedbackAPI.translateToEnglish(feedback.transcript);
+      const response = await feedbackAPI.translateToEnglish(feedback.transcript, 'English');
       const translation = response?.data?.english_translation;
 
       if (translation) {
@@ -122,6 +122,7 @@ const ReportDashboard = () => {
 
     const payload = {
       qrId: qrId || feedback.qr_id || '',
+      room: feedback.room_number || 'N/A',
       urgency_status: 'low',
       is_resolved: true,
       last_updated: new Date().toISOString(),
@@ -136,8 +137,9 @@ const ReportDashboard = () => {
           body: JSON.stringify(payload),
         }
       );
+      const result = await response.json();
 
-      if (response.ok) {
+      if (response.ok && result.modifiedCount > 0) {
         setFeedbacks((prev) =>
           prev.map((item) =>
             item._id === feedbackId
