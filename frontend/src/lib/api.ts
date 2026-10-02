@@ -417,8 +417,8 @@ export const scanAPI = {
 };
 
 export const feedbackAPI = {
-  getFeedbacks: async (qrId: string, date: string): Promise<FeedbackResult> => {
-    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks/?qrId=${qrId}&date=${date}`;
+  getFeedbacksByDate: async (qrId: string, date: string, clientName: string): Promise<FeedbackResult> => {
+    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks-by-date/?qrId=${qrId}&date=${date}`;
 
     try {
       const response = await fetch(endpoint, {
@@ -441,7 +441,7 @@ export const feedbackAPI = {
       };
       return result;
     } catch (error) {
-      console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
+      console.error("API Call Error in productFeedbackAPI.getProductFeedbacks:", error);
       throw error;
     }
   },
@@ -473,5 +473,62 @@ export const feedbackAPI = {
       console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
       throw error;
     }
+  },
+
+  translateText: async (text: string, targetLanguage: string): Promise<{ success: boolean; data?: any}> => {
+    const endpoint = import.meta.env.VITE_TEXT_TRANSLATION_API;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: text, target_language: targetLanguage }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to translate text. Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("API Call Error in facilityAPI.translateText:", error);
+      throw error;
+    }
   }
-}
+};
+
+// PRODUCT FEEDBACKS ENDPOINTS
+
+export const productFeedbackAPI = {
+  getProductFeedbacks: async (qrId: string): Promise<FeedbackResult> => {
+    const endpoint = `${BACKEND_URL}/feedback/get-product-feedbacks/?qrId=${qrId}`;  
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch feedbacks. Status: ${response.status}`);
+      }
+
+      const res = await response.json();
+
+      const result: FeedbackResult = {
+        success: res.success,
+        message: res.message,
+        feedbacks: res.feedbacks
+      };
+      return result;
+    } catch (error) {
+      console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
+      throw error;
+    }
+  }
+};

@@ -38,7 +38,7 @@ class Datacubeservices {
         const payload = {
             database_id: databaseId,
             collection_name: collectionName,
-            data: [data]
+            documents: [data]
         };
         try {
             const response = await axios.post(url, payload, { headers: this.headers });

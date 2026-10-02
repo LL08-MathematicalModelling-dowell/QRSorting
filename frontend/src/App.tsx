@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import HotelFeedbackReport from "./pages/HotelFeedbackReport";
 import RoomOverviewDashboard from "./pages/RoomOverviewDashboard";
 import RoomOverviewDashboard2 from "./pages/RoomOverviewDashboard2";
+import ProductFeedbackReport from "./pages/ProductFeedbackReport";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,9 @@ const App = () => (
           <Route path="/hotel-feedback/" element={<HotelFeedbackReport />} />
           <Route path="/room-overview" element={<RoomOverviewDashboard />} />
           <Route path="/room-overview-dummy" element={<RoomOverviewDashboard2 />} />
+
+          {/* Product Feedback Report route */}
+          <Route path="/product-feedback/" element={<ProductFeedbackReport />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -105,5 +105,4 @@ export interface FeedbackResult {
   feedbacks: any;
 }
 
-
 export type UserRole = 'merchant' | 'delivery' | 'customer';
