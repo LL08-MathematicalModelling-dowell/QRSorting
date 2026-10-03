@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { productFeedbackAPI, feedbackAPI } from '@/lib/api';
 
+
 // Label mappings for raw acoustic emotion distributions
 const EMOTION_LABEL_MAP = {
   sad: 'Disappointed / Dissatisfied',
@@ -66,7 +67,7 @@ const getRelativeTimeString = (dateString) => {
 const ReportDashboard = () => {
   const [searchParams] = useSearchParams();
   const id = searchParams.get('id');
-  const qrId = id.slice(0,4);
+  const qrId = id ? id.slice(0, 4) : '';
 
   const [feedbacks, setFeedbacks] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -185,55 +186,6 @@ const ReportDashboard = () => {
     }
   };
 
-  // const handleMarkAsResolved = async (feedback) => {
-  //   const feedbackId = feedback._id;
-  //   setResolvingMap((prev) => ({ ...prev, [feedbackId]: true }));
-
-  //   const payload = {
-  //     qrId: qrId || feedback.qr_id || '',
-  //     room: feedback.room_number || 'N/A',
-  //     urgency_status: 'low',
-  //     is_resolved: true,
-  //     last_updated: new Date().toISOString(),
-  //   };
-
-  //   try {
-  //     const response = await fetch(
-  //       'http://localhost:8004/api/text-analysis/feedback-metadata/',
-  //       {
-  //         method: 'PUT',
-  //         headers: { 'Content-Type': 'application/json' },
-  //         body: JSON.stringify(payload),
-  //       }
-  //     );
-  //     const result = await response.json();
-
-  //     if (response.ok && result.modifiedCount > 0) {
-  //       setFeedbacks((prev) =>
-  //         prev.map((item) =>
-  //           item._id === feedbackId
-  //             ? {
-  //                 ...item,
-  //                 metadata: {
-  //                   ...item.metadata,
-  //                   is_resolved: true,
-  //                   urgency_status: 'low',
-  //                   last_updated: payload.last_updated,
-  //                 },
-  //               }
-  //             : item
-  //         )
-  //       );
-  //     } else {
-  //       console.error('Failed to update resolution status:', response.statusText);
-  //     }
-  //   } catch (err) {
-  //     console.error('Error marking feedback as resolved:', err);
-  //   } finally {
-  //     setResolvingMap((prev) => ({ ...prev, [feedbackId]: false }));
-  //   }
-  // };
-
   if (loading) 
     return (
       <div className="h-screen flex items-center justify-center text-stone-600 font-sans">
@@ -270,12 +222,10 @@ const ReportDashboard = () => {
   const locationInfo = meta.location || meta.room || feedback.room_number || `Batch ${feedback.batch_id || 'N/A'}`;
   const locationExtra = meta.extra_info || (feedback.qr_id ? `QR: ${feedback.qr_id}` : '');
   const severity = meta.urgency_status || meta.severity || metrics.severity || audio.severity || 'low';
-  const isResolved = meta.is_resolved ?? feedback.is_resolved ?? false;
 
   const aiAssessment = metrics.ai_assessment_remark || 'No assessment available.';
   const customerReport = feedback.description || feedback.transcript || 'No report text provided.';
   const recommendedAction = metrics.recommended_action || audio.recommended_action || 'No action specified.';
-  const isResolving = resolvingMap[feedback._id] || false;
 
   const distributionEntries = Object.entries(rawDistribution).sort(([, a], [, b]) => b - a);
   const dominantLabel = EMOTION_LABEL_MAP[audio.dominant_emotion?.toLowerCase()] || audio.dominant_emotion || 'Acoustic';
@@ -294,8 +244,34 @@ const ReportDashboard = () => {
     return 'border-l-emerald-500';
   };
 
+  // Render Selector Component to reuse between Mobile & Desktop locations
+  const renderFeedbackSelector = (extraClasses = '') => (
+    feedbacks.length > 0 && (
+      <div className={`relative ${extraClasses}`}>
+        <select
+          value={selectedIndex}
+          onChange={(e) => setSelectedIndex(Number(e.target.value))}
+          className="w-full lg:w-auto appearance-none bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-medium text-xs rounded-lg pl-3 pr-8 py-2 lg:py-1.5 focus:outline-none cursor-pointer shadow-xs transition"
+        >
+          {feedbacks.map((item, idx) => {
+            const dateStr = item.metadata?.submitted_at || item.metadata?.date || item.submitted_at;
+            const relativeTime = getRelativeTimeString(dateStr);
+            const itemSeverity = item.metadata?.urgency_status || item.severity || 'low';
+
+            return (
+              <option key={item._id || idx} value={idx}>
+                Feedback #{idx + 1} ({itemSeverity}) {relativeTime ? `• ${relativeTime}` : ''}
+              </option>
+            );
+          })}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+    )
+  );
+
   return (
-    <div className="h-screen w-screen bg-[#FAF7F2] p-4 sm:p-6 font-sans text-stone-800 flex flex-col overflow-hidden box-border">
+    <div className="min-h-screen lg:h-screen w-screen bg-[#FAF7F2] p-4 sm:p-6 font-sans text-stone-800 flex flex-col overflow-y-auto lg:overflow-hidden box-border">
       {/* HEADER */}
       <div className="flex justify-between items-center pb-3 border-b border-stone-200/80 shrink-0">
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
@@ -320,48 +296,65 @@ const ReportDashboard = () => {
             Live (3s)
           </span>
 
-          {feedbacks.length > 0 && (
-            <div className="relative">
-              <select
-                value={selectedIndex}
-                onChange={(e) => setSelectedIndex(Number(e.target.value))}
-                className="appearance-none bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-medium text-xs rounded-lg pl-3 pr-8 py-1.5 focus:outline-none cursor-pointer shadow-xs transition"
-              >
-                {feedbacks.map((item, idx) => {
-                  const dateStr = item.metadata?.submitted_at || item.metadata?.date || item.submitted_at;
-                  const relativeTime = getRelativeTimeString(dateStr);
-                  const itemSeverity = item.metadata?.urgency_status || item.severity || 'low';
-
-                  return (
-                    <option key={item._id || idx} value={idx}>
-                      Feedback #{idx + 1} ({itemSeverity}) {relativeTime ? `• ${relativeTime}` : ''}
-                    </option>
-                  );
-                })}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-stone-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          )}
+          {/* DESKTOP FEEDBACK SELECTOR */}
+          {renderFeedbackSelector('hidden lg:block')}
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-stone-500 hidden md:inline">
             {feedbacks.length} report{feedbacks.length !== 1 ? 's' : ''} received
           </span>
-          {/* <button className="p-1.5 text-stone-500 hover:bg-stone-200/50 rounded-full transition">
-            <Search className="w-4 h-4" />
-          </button>
-          <button className="p-1.5 text-stone-500 hover:bg-stone-200/50 rounded-full transition">
-            <MoreHorizontal className="w-4 h-4" />
-          </button> */}
         </div>
       </div>
 
       {/* 50/50 SPLIT CONTENT CONTAINER */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3 flex-1 min-h-0 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3 flex-1 min-h-0">
         
-        {/* LEFT 50%: REPORT & AI DIAGNOSTICS */}
-        <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+        {/* MAP CONTAINER: FIRST ON MOBILE, LEFT (ORDER-1) ON DESKTOP */}
+        <div className="flex flex-col h-auto lg:h-full order-1">
+          <div className="bg-white rounded-xl shadow-xs border border-stone-200/80 p-4 flex flex-col flex-1 overflow-hidden min-h-[350px] sm:min-h-[400px] lg:min-h-0">
+            <div className="flex items-center justify-between pb-2 shrink-0">
+              <h3 className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                Live Location Overview
+              </h3>
+              <a
+                href={`${import.meta.env.VITE_PURETRACE_MAP}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-emerald-700 hover:underline font-medium inline-flex items-center gap-1"
+              >
+                Open Full Map <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <div className="w-full flex-1 rounded-lg overflow-hidden border border-stone-200 bg-stone-50 relative min-h-[220px] lg:min-h-0">
+              <iframe
+                src={`${import.meta.env.VITE_PURETRACE_MAP}`}
+                title="Scan Location Map"
+                className="w-full h-full border-0"
+                loading="lazy"
+              />
+            </div>
+
+            <div className="bg-stone-50 rounded-lg p-2 mt-2 text-[10px] text-stone-600 grid grid-cols-2 gap-2 shrink-0">
+              <div>
+                <span className="text-stone-400 block">Batch ID:</span>
+                <span className="font-medium text-stone-800">{feedback.batch_id || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-stone-400 block">QR Code ID:</span>
+                <span className="font-medium text-stone-800">{feedback.qr_id || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* MOBILE/TABLET FEEDBACK SELECTOR (DISPLAYED BELOW MAP) */}
+          {renderFeedbackSelector('block lg:hidden mt-3')}
+        </div>
+
+        {/* REPORT & AI DIAGNOSTICS: SECOND ON MOBILE, RIGHT (ORDER-2) ON DESKTOP */}
+        <div className="flex flex-col gap-3 h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-1 order-2">
           {/* PRIMARY FEEDBACK CARD */}
           <div
             className={`bg-white rounded-xl shadow-xs border border-stone-200/80 border-l-[8px] p-4 relative transition shrink-0 ${getCardBorderClass(
@@ -404,31 +397,6 @@ const ReportDashboard = () => {
                 </p>
               </div>
             </div>
-
-            {/* ACTION BUTTON */}
-            {/* <div className="flex justify-end">
-              {isResolved ? (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-stone-100 text-stone-600 font-medium text-xs">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Reviewed
-                </span>
-              ) : (
-                <button
-                  onClick={() => handleMarkAsResolved(feedback)}
-                  disabled={isResolving}
-                  className="px-4 py-1.5 rounded-lg bg-[#093C3B] hover:bg-[#072d2c] text-white font-medium text-xs shadow-xs disabled:opacity-50 transition cursor-pointer flex items-center gap-1.5"
-                >
-                  {isResolving ? (
-                    <>
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    'Mark as Reviewed'
-                  )}
-                </button>
-              )}
-            </div> */}
           </div>
 
           {/* AI DIAGNOSTIC BREAKDOWN */}
@@ -448,7 +416,7 @@ const ReportDashboard = () => {
                     <h3 className="text-xs font-bold text-stone-800 mb-1">Semantic Content</h3>
                     <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/80">
                       <p className="text-[11px] text-stone-700 font-mono break-all leading-snug">
-                        {feedback.transcript ||'No transcript text available.'}
+                        {feedback.transcript || 'No transcript text available.'}
                       </p>
                     </div>
                   </div>
@@ -461,7 +429,7 @@ const ReportDashboard = () => {
                     <div className="flex gap-2 items-center">
                       <div className="relative flex-1">
                         <select
-                          value={selectedLanguageMap[feedback._id]}
+                          value={selectedLanguageMap[feedback._id] || ''}
                           onChange={(e) =>
                             setSelectedLanguageMap((prev) => ({
                               ...prev,
@@ -517,7 +485,7 @@ const ReportDashboard = () => {
               </div>
 
               {/* ACOUSTIC ANALYSIS */}
-              <div className="bg-white rounded-lg p-3 shadow-xs border border-stone-200/60 flex flex-col justify-between overflow-hidden">
+              <div className="bg-white rounded-lg p-3 shadow-xs border border-stone-200/60 flex flex-col justify-between overflow-hidden min-h-[200px]">
                 <div className="flex flex-col h-full overflow-hidden">
                   <span className="inline-block text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 mb-1.5 shrink-0">
                     AUDIO / EMOTION ANALYSIS
@@ -555,44 +523,6 @@ const ReportDashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT 50%: LANDSCAPE MAP CONTAINER */}
-        <div className="bg-white rounded-xl shadow-xs border border-stone-200/80 p-4 flex flex-col h-full overflow-hidden">
-          <div className="flex items-center justify-between pb-2 shrink-0">
-            <h3 className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-emerald-700" />
-              Live Location Overview
-            </h3>
-            <a
-              href="https://reviewanalysis.uxlivinglab.org/scan-map"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] text-emerald-700 hover:underline font-medium inline-flex items-center gap-1"
-            >
-              Open Full Map <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-
-          <div className="w-full flex-1 rounded-lg overflow-hidden border border-stone-200 bg-stone-50 relative min-h-0">
-            <iframe
-              src="https://reviewanalysis.uxlivinglab.org/scan-map"
-              title="Scan Location Map"
-              className="w-full h-full border-0"
-              loading="lazy"
-            />
-          </div>
-
-          <div className="bg-stone-50 rounded-lg p-2 mt-2 text-[10px] text-stone-600 grid grid-cols-2 gap-2 shrink-0">
-            <div>
-              <span className="text-stone-400 block">Batch ID:</span>
-              <span className="font-medium text-stone-800">{feedback.batch_id || 'N/A'}</span>
-            </div>
-            <div>
-              <span className="text-stone-400 block">QR Code ID:</span>
-              <span className="font-medium text-stone-800">{feedback.qr_id || 'N/A'}</span>
             </div>
           </div>
         </div>
