@@ -79,7 +79,6 @@ const ReportDashboard = () => {
   const [selectedLanguageMap, setSelectedLanguageMap] = useState({});
   const [translations, setTranslations] = useState({});
   const [translating, setTranslating] = useState({});
-  const [resolvingMap, setResolvingMap] = useState({});
 
   // Core data fetching logic
   const fetchFeedbackAndMetadata = useCallback(
@@ -104,7 +103,7 @@ const ReportDashboard = () => {
           feedbackList.map(async (feedback) => {
             try {
               const metaRes = await fetch(
-                `http://localhost:8004/api/text-analysis/feedback-metadata/?qrId=${qrId}&feedbackId=${feedback._id}`,
+                `${import.meta.env.VITE_METADATA_API}?qrId=${qrId}&feedbackId=${feedback._id}`,
                 {
                   method: 'GET',
                   headers: { 'Content-Type': 'application/json' },
@@ -162,12 +161,13 @@ const ReportDashboard = () => {
     const textToTranslate = feedback.transcript || feedback.description;
     if (!textToTranslate || translating[feedback._id]) return;
 
-    const targetLang = selectedLanguageMap[feedback._id];
+    // Fallback to default language if not explicitly mapped yet
+    const targetLang = selectedLanguageMap[feedback._id] || SUPPORTED_LANGUAGES[0];
 
     try {
       setTranslating((prev) => ({ ...prev, [feedback._id]: true }));
       const response = await feedbackAPI.translateText(textToTranslate, targetLang);
-      const translation = response?.data?.translation || 'Translation not available.';
+      const translation = response?.data?.translation || response?.translation || 'Translation not available.';
 
       if (translation) {
         setTranslations((prev) => ({
@@ -429,7 +429,7 @@ const ReportDashboard = () => {
                     <div className="flex gap-2 items-center">
                       <div className="relative flex-1">
                         <select
-                          value={selectedLanguageMap[feedback._id] || ''}
+                          value={selectedLanguageMap[feedback._id] || SUPPORTED_LANGUAGES[0]}
                           onChange={(e) =>
                             setSelectedLanguageMap((prev) => ({
                               ...prev,
