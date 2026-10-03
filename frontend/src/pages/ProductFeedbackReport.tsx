@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { productFeedbackAPI, feedbackAPI } from '@/lib/api';
 
-
 // Label mappings for raw acoustic emotion distributions
 const EMOTION_LABEL_MAP = {
   sad: 'Disappointed / Dissatisfied',
@@ -42,26 +41,29 @@ const SUPPORTED_LANGUAGES = [
   'Urdu',
 ];
 
-// Helper function to format timestamps into relative time (e.g., "2m ago")
-const getRelativeTimeString = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '';
+// Helper function to parse ISO timestamps with trailing malformed zone indicators
+const parseTimestamp = (dateString) => {
+  if (!dateString) return null;
 
-  const now = new Date();
-  const diffInSeconds = Math.floor((now - date) / 1000);
+  let sanitizedStr = String(dateString).trim();
+  if (sanitizedStr.endsWith('+00:00Z')) {
+    sanitizedStr = sanitizedStr.replace(/\+00:00Z$/, 'Z');
+  }
 
-  if (diffInSeconds < 30) return 'Just now';
-  if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+  const date = new Date(sanitizedStr);
+  return isNaN(date.getTime()) ? null : date;
+};
 
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+// Helper function to format timestamp into 24-hour time (e.g., "12:17")
+const getFormattedTimeString = (dateString) => {
+  const date = parseTimestamp(dateString);
+  if (!date) return '';
 
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays}d ago`;
+  return date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 };
 
 const ReportDashboard = () => {
@@ -79,7 +81,7 @@ const ReportDashboard = () => {
   const [selectedLanguageMap, setSelectedLanguageMap] = useState({});
   const [translations, setTranslations] = useState({});
   const [translating, setTranslating] = useState({});
-  const [resolvingMap, setResolvingMap] = useState({});
+  const [translationErrors, setTranslationErrors] = useState({});
 
   // Core data fetching logic
   const fetchFeedbackAndMetadata = useCallback(
@@ -104,7 +106,7 @@ const ReportDashboard = () => {
           feedbackList.map(async (feedback) => {
             try {
               const metaRes = await fetch(
-                `http://localhost:8004/api/text-analysis/feedback-metadata/?qrId=${qrId}&feedbackId=${feedback._id}`,
+                `${import.meta.env.VITE_METADATA_API}?qrId=${qrId}&feedbackId=${feedback._id}`,
                 {
                   method: 'GET',
                   headers: { 'Content-Type': 'application/json' },
@@ -126,11 +128,12 @@ const ReportDashboard = () => {
           })
         );
 
-        const sortedFeedbacks = [...feedbacksWithMetadata].sort(
-          (a, b) =>
-            new Date(b.metadata?.submitted_at || b.metadata?.date || b.submitted_at) -
-            new Date(a.metadata?.submitted_at || a.metadata?.date || a.submitted_at)
-        );
+        // Sort descending by submitted_at date (latest feedback first)
+        const sortedFeedbacks = [...feedbacksWithMetadata].sort((a, b) => {
+          const dateA = parseTimestamp(a.submitted_at || a.metadata?.submitted_at || a.metadata?.date) || new Date(0);
+          const dateB = parseTimestamp(b.submitted_at || b.metadata?.submitted_at || b.metadata?.date) || new Date(0);
+          return dateB - dateA;
+        });
 
         setFeedbacks(sortedFeedbacks);
         setError(null);
@@ -157,42 +160,77 @@ const ReportDashboard = () => {
     return () => clearInterval(intervalId);
   }, [fetchFeedbackAndMetadata]);
 
-  // Dynamic Translate Handler based on selected language
+  // Dynamic Translate Handler with Fallback Text Support
   const handleTranslate = async (feedback) => {
-    const textToTranslate = feedback.transcript || feedback.description;
-    if (!textToTranslate || translating[feedback._id]) return;
+    const feedbackId = feedback._id;
+    const defaultPlaceholderText = "No transcript text available.";
 
-    const targetLang = selectedLanguageMap[feedback._id];
+    // Use transcript, fallback to description, or fallback to default placeholder text
+    const textToTranslate =
+      (feedback.transcript && feedback.transcript.trim()) ||
+      (feedback.description && feedback.description.trim()) ||
+      defaultPlaceholderText;
+
+    const targetLang = selectedLanguageMap[feedbackId] || SUPPORTED_LANGUAGES[0];
+
+    console.group(`[TRANSLATE DEBUG] Triggered for Feedback ID: ${feedbackId}`);
+    console.log('1. Feedback Object:', feedback);
+    console.log('2. Target Language:', targetLang);
+    console.log('3. Input Text Sent to API:', textToTranslate);
+
+    // Clear previous errors
+    setTranslationErrors((prev) => ({ ...prev, [feedbackId]: null }));
+
+    if (translating[feedbackId]) {
+      console.warn('⚠️ Translation request already in progress.');
+      console.groupEnd();
+      return;
+    }
 
     try {
-      setTranslating((prev) => ({ ...prev, [feedback._id]: true }));
-      const response = await feedbackAPI.translateText(textToTranslate, targetLang);
-      const translation = response?.data?.translation || 'Translation not available.';
+      setTranslating((prev) => ({ ...prev, [feedbackId]: true }));
+      console.log(`4. Executing feedbackAPI.translateText("${textToTranslate}", "${targetLang}")`);
 
-      if (translation) {
+      const response = await feedbackAPI.translateText(textToTranslate, targetLang);
+      console.log('5. API Raw Response Received:', response);
+
+      const translationText =
+        response?.data?.translation ||
+        response?.translation ||
+        (typeof response === 'string' ? response : null);
+
+      if (translationText) {
+        console.log('6. Extracted Translation Text:', translationText);
         setTranslations((prev) => ({
           ...prev,
-          [feedback._id]: {
-            text: translation,
+          [feedbackId]: {
+            text: translationText,
             targetLanguage: targetLang,
-            detectedLanguage: response?.data?.detected_language || 'Auto',
+            detectedLanguage: response?.data?.detected_language || response?.detected_language || 'Auto',
           },
         }));
+      } else {
+        const errMsg = 'API responded successfully but returned an empty translation.';
+        console.error('❌ Data Parse Error:', errMsg, response);
+        setTranslationErrors((prev) => ({ ...prev, [feedbackId]: errMsg }));
       }
     } catch (error) {
-      console.error('Translation error:', error);
+      console.error('❌ Translation API Error:', error);
+      const errMsg = error?.response?.data?.message || error?.message || 'Translation failed. Check console.';
+      setTranslationErrors((prev) => ({ ...prev, [feedbackId]: errMsg }));
     } finally {
-      setTranslating((prev) => ({ ...prev, [feedback._id]: false }));
+      setTranslating((prev) => ({ ...prev, [feedbackId]: false }));
+      console.groupEnd();
     }
   };
 
-  if (loading) 
+  if (loading)
     return (
       <div className="h-screen flex items-center justify-center text-stone-600 font-sans">
-        <Loader className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`}/> 
-          <h1 className="ml-2 text-stone-600 font-sans">Generating your dashboard...</h1>
+        <Loader className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <h1 className="ml-2 text-stone-600 font-sans">Generating your dashboard...</h1>
       </div>
-  );
+    );
 
   if (error) return <div className="h-screen flex items-center justify-center text-red-600 font-sans">{error}</div>;
 
@@ -254,13 +292,15 @@ const ReportDashboard = () => {
           className="w-full lg:w-auto appearance-none bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-medium text-xs rounded-lg pl-3 pr-8 py-2 lg:py-1.5 focus:outline-none cursor-pointer shadow-xs transition"
         >
           {feedbacks.map((item, idx) => {
-            const dateStr = item.metadata?.submitted_at || item.metadata?.date || item.submitted_at;
-            const relativeTime = getRelativeTimeString(dateStr);
-            const itemSeverity = item.metadata?.urgency_status || item.severity || 'low';
+            const dateStr = item.submitted_at || item.metadata?.submitted_at || item.metadata?.date;
+            const timeFormatted = getFormattedTimeString(dateStr);
+            const itemSeverity = item.metadata?.urgency_status || item.severity || item.audio_analysis?.severity || item.dashboard_metrics?.severity || 'low';
+
+            const feedbackNumber = feedbacks.length - idx;
 
             return (
               <option key={item._id || idx} value={idx}>
-                Feedback #{idx + 1} ({itemSeverity}) {relativeTime ? `• ${relativeTime}` : ''}
+                Feedback #{feedbackNumber} {timeFormatted ? `- ${timeFormatted}` : ''} ({itemSeverity})
               </option>
             );
           })}
@@ -276,10 +316,10 @@ const ReportDashboard = () => {
       <div className="flex justify-between items-center pb-3 border-b border-stone-200/80 shrink-0">
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <img 
-              src="/puretrace-logo.png" 
-              alt="PureTrace" 
-              className="h-7 w-auto object-contain hidden sm:block" 
+            <img
+              src="/puretrace-logo.png"
+              alt="PureTrace"
+              className="h-7 w-auto object-contain hidden sm:block"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
             <span className="text-xl font-black tracking-wider uppercase font-sans">
@@ -309,7 +349,7 @@ const ReportDashboard = () => {
 
       {/* 50/50 SPLIT CONTENT CONTAINER */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3 flex-1 min-h-0">
-        
+
         {/* MAP CONTAINER: FIRST ON MOBILE, LEFT (ORDER-1) ON DESKTOP */}
         <div className="flex flex-col h-auto lg:h-full order-1">
           <div className="bg-white rounded-xl shadow-xs border border-stone-200/80 p-4 flex flex-col flex-1 overflow-hidden min-h-[350px] sm:min-h-[400px] lg:min-h-0">
@@ -416,7 +456,7 @@ const ReportDashboard = () => {
                     <h3 className="text-xs font-bold text-stone-800 mb-1">Semantic Content</h3>
                     <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/80">
                       <p className="text-[11px] text-stone-700 font-mono break-all leading-snug">
-                        {feedback.transcript || 'No transcript text available.'}
+                        {feedback.transcript || feedback.description || "No transcript text available."}
                       </p>
                     </div>
                   </div>
@@ -429,13 +469,14 @@ const ReportDashboard = () => {
                     <div className="flex gap-2 items-center">
                       <div className="relative flex-1">
                         <select
-                          value={selectedLanguageMap[feedback._id] || ''}
-                          onChange={(e) =>
+                          value={selectedLanguageMap[feedback._id] || SUPPORTED_LANGUAGES[0]}
+                          onChange={(e) => {
+                            console.log(`Language selected for Feedback ${feedback._id}:`, e.target.value);
                             setSelectedLanguageMap((prev) => ({
                               ...prev,
                               [feedback._id]: e.target.value,
-                            }))
-                          }
+                            }));
+                          }}
                           className="w-full appearance-none bg-white border border-stone-300 rounded-lg px-3 py-1.5 text-xs text-stone-800 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer pr-8"
                         >
                           {SUPPORTED_LANGUAGES.map((lang) => (
@@ -462,6 +503,13 @@ const ReportDashboard = () => {
                         )}
                       </button>
                     </div>
+
+                    {/* TRANSLATION ERROR MESSAGE */}
+                    {translationErrors[feedback._id] && (
+                      <p className="mt-1.5 text-[11px] text-red-600 font-medium">
+                        ⚠️ {translationErrors[feedback._id]}
+                      </p>
+                    )}
                   </div>
 
                   {/* TRANSLATED OUTPUT BOX */}
