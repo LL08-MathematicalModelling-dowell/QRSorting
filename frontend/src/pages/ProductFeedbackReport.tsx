@@ -9,6 +9,7 @@ import {
   Languages,
   Loader2 as Loader,
   Clock,
+  Inbox,
 } from 'lucide-react';
 import { productFeedbackAPI, feedbackAPI } from '@/lib/api';
 
@@ -290,21 +291,7 @@ const ReportDashboard = () => {
 
   if (error) return <div className="h-screen flex items-center justify-center text-red-600 font-sans">{error}</div>;
 
-  if (!feedbacks.length) {
-    return (
-      <div className="h-screen bg-[#FAF7F2] p-6 font-sans text-stone-800 flex flex-col justify-center items-center">
-        <div className="mb-4">
-          <span className="text-2xl font-black tracking-wider uppercase font-sans">
-            <span className="text-stone-600">PURE</span>
-            <span className="text-[#32D583]">TRACE</span>
-          </span>
-        </div>
-        <p className="text-stone-500 text-sm">No feedback received today for this QR code.</p>
-      </div>
-    );
-  }
-
-  // Active selected feedback from filtered list
+  // Active selected feedback from filtered list (if available)
   const feedback = filteredFeedbacks[selectedIndex] || filteredFeedbacks[0] || {};
 
   const meta = feedback.metadata || {};
@@ -365,6 +352,8 @@ const ReportDashboard = () => {
     )
   );
 
+  const selectedIntervalLabel = TIME_INTERVALS.find(i => i.hours === selectedIntervalHours)?.label || `${selectedIntervalHours} hours`;
+
   return (
     <div className="min-h-screen lg:h-screen w-screen bg-[#FAF7F2] p-4 sm:p-6 font-sans text-stone-800 flex flex-col overflow-y-auto lg:overflow-hidden box-border">
       {/* HEADER */}
@@ -414,191 +403,113 @@ const ReportDashboard = () => {
 
         <div className="flex items-center gap-2">
           <span className="text-medium text-stone-600 hidden md:inline">
-            {filteredFeedbacks.length} report{filteredFeedbacks.length !== 1 ? 's' : ''} in {TIME_INTERVALS.find(i => i.hours === selectedIntervalHours)?.label}
+            {filteredFeedbacks.length} report{filteredFeedbacks.length !== 1 ? 's' : ''} in {selectedIntervalLabel}
           </span>
         </div>
       </div>
 
-      {!filteredFeedbacks.length ? (
-        <div className="flex-1 flex flex-col justify-center items-center text-stone-500 text-sm py-12">
-          No reports found for the selected time interval ({TIME_INTERVALS.find(i => i.hours === selectedIntervalHours)?.label}).
-        </div>
-      ) : (
-        /* 50/50 SPLIT CONTENT CONTAINER */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3 flex-1 min-h-0">
+      {/* 50/50 SPLIT CONTENT CONTAINER */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3 flex-1 min-h-0">
 
-          {/* MAP CONTAINER: FIRST ON MOBILE, LEFT (ORDER-1) ON DESKTOP */}
-          <div className="flex flex-col h-auto lg:h-full order-1">
-            <div className="bg-white rounded-xl shadow-xs border border-stone-200/80 flex flex-col flex-1 overflow-hidden relative min-h-[350px] sm:min-h-[400px] lg:min-h-0">
-              <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3 bg-white/90 backdrop-blur-xs border-b border-stone-200/60">
-                <h3 className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-700" />
-                  Live Location Overview
-                </h3>
-                <a
-                  href={`${import.meta.env.VITE_PURETRACE_MAP}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-emerald-700 hover:underline font-medium inline-flex items-center gap-1"
-                >
-                  Open Full Map <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-
-              <div className="w-full h-full flex-1 relative pt-10">
-                <iframe
-                  src={`${import.meta.env.VITE_PURETRACE_MAP}`}
-                  title="Scan Location Map"
-                  className="w-full h-full border-0"
-                  loading="lazy"
-                />
-              </div>
+        {/* MAP CONTAINER: ALWAYS RENDERED ON LEFT (DESKTOP) / TOP (MOBILE) */}
+        <div className="flex flex-col h-auto lg:h-full order-1">
+          <div className="bg-white rounded-xl shadow-xs border border-stone-200/80 flex flex-col flex-1 overflow-hidden relative min-h-[350px] sm:min-h-[400px] lg:min-h-0">
+            <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3 bg-white/90 backdrop-blur-xs border-b border-stone-200/60">
+              <h3 className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                Live Location Overview
+              </h3>
+              <a
+                href={`${import.meta.env.VITE_PURETRACE_MAP}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-emerald-700 hover:underline font-medium inline-flex items-center gap-1"
+              >
+                Open Full Map <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
 
-            {/* MOBILE/TABLET FEEDBACK SELECTOR (DISPLAYED BELOW MAP) */}
-            {renderFeedbackSelector('block lg:hidden mt-3')}
+            <div className="w-full h-full flex-1 relative pt-10">
+              <iframe
+                src={`${import.meta.env.VITE_PURETRACE_MAP}`}
+                title="Scan Location Map"
+                className="w-full h-full border-0"
+                loading="lazy"
+              />
+            </div>
           </div>
 
-          {/* REPORT & AI DIAGNOSTICS: SECOND ON MOBILE, RIGHT (ORDER-2) ON DESKTOP */}
-          <div className="flex flex-col gap-3 h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-1 order-2">
-            {/* PRIMARY FEEDBACK CARD */}
-            <div
-              className={`bg-white rounded-xl shadow-xs border border-stone-200/80 border-l-[8px] p-4 relative transition shrink-0 ${getCardBorderClass(
-                severity
-              )}`}
-            >
-              <div className="flex justify-between items-center mb-3">
-                <span
-                  className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded border ${getPriorityBadgeClass(
-                    severity
-                  )}`}
-                >
-                  {severity} priority
-                </span>
-                <p className="text-stone-600 text-xs font-semibold">
-                  {locationInfo} <span className="text-stone-400 font-normal">{locationExtra}</span>
-                </p>
-              </div>
+          {/* MOBILE/TABLET FEEDBACK SELECTOR (DISPLAYED BELOW MAP) */}
+          {renderFeedbackSelector('block lg:hidden mt-3')}
+        </div>
 
-              {/* 3-COLUMN METRICS GRID */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-                <div className="bg-stone-100/70 rounded-lg p-3">
-                  <span className="text-[11px] font-bold text-stone-800 block mb-1">AI Insight</span>
-                  <p className="text-[11px] text-stone-600 leading-snug line-clamp-3">
-                    {aiAssessment}
+        {/* REPORT & AI DIAGNOSTICS: SECOND ON MOBILE, RIGHT (ORDER-2) ON DESKTOP */}
+        <div className="flex flex-col gap-3 h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-1 order-2">
+          {!filteredFeedbacks.length ? (
+            /* EMPTY STATE CARD WHEN NO REPORTS ARE FOUND IN SELECTED INTERVAL */
+            <div className="bg-white rounded-xl shadow-xs border border-stone-200/80 p-8 h-full flex flex-col items-center justify-center text-center">
+              <div className="p-3 bg-stone-100 rounded-full mb-3">
+                <Inbox className="w-6 h-6 text-stone-400" />
+              </div>
+              <h3 className="text-sm font-bold text-stone-800 mb-1">
+                No Feedback Reports
+              </h3>
+              <p className="text-xs text-stone-500 max-w-xs leading-relaxed">
+                No reports found for the selected time interval ({selectedIntervalLabel}).
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* PRIMARY FEEDBACK CARD */}
+              <div
+                className={`bg-white rounded-xl shadow-xs border border-stone-200/80 border-l-[8px] p-4 relative transition shrink-0 ${getCardBorderClass(
+                  severity
+                )}`}
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <span
+                    className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded border ${getPriorityBadgeClass(
+                      severity
+                    )}`}
+                  >
+                    {severity} priority
+                  </span>
+                  <p className="text-stone-600 text-xs font-semibold">
+                    {locationInfo} <span className="text-stone-400 font-normal">{locationExtra}</span>
                   </p>
                 </div>
 
-                {/* CUSTOMER REPORT CARD WITH INTEGRATED TRANSLATION */}
-                <div className="bg-stone-100/70 rounded-lg p-3 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[11px] font-bold text-stone-800 block mb-1">Customer Report</span>
-                    <p className="text-[11px] text-stone-600 italic leading-snug line-clamp-3">
-                      "{customerReport}"
+                {/* 3-COLUMN METRICS GRID */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                  <div className="bg-stone-100/70 rounded-lg p-3">
+                    <span className="text-[11px] font-bold text-stone-800 block mb-1">AI Insight</span>
+                    <p className="text-[11px] text-stone-600 leading-snug line-clamp-3">
+                      {aiAssessment}
                     </p>
                   </div>
 
-                  {/* CUSTOMER REPORT TRANSLATE CONTROLS */}
-                  <div className="mt-2.5 pt-2 border-t border-stone-200/60">
-                    <div className="flex gap-1.5 items-center">
-                      <div className="relative flex-1">
-                        <select
-                          value={crSelectedLangMap[feedback._id] || SUPPORTED_LANGUAGES[0]}
-                          onChange={(e) =>
-                            setCrSelectedLangMap((prev) => ({
-                              ...prev,
-                              [feedback._id]: e.target.value,
-                            }))
-                          }
-                          className="w-full appearance-none bg-white border border-stone-300 rounded px-2 py-1 text-[10px] text-stone-800 font-medium focus:outline-none cursor-pointer pr-5"
-                        >
-                          {SUPPORTED_LANGUAGES.map((lang) => (
-                            <option key={lang} value={lang}>
-                              {lang}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-3 h-3 text-stone-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-
-                      <button
-                        onClick={() => handleCustomerReportTranslate(feedback)}
-                        disabled={crTranslating[feedback._id]}
-                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[10px] rounded transition disabled:opacity-50 flex items-center gap-1 cursor-pointer shrink-0"
-                      >
-                        {crTranslating[feedback._id] ? (
-                          <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                        ) : (
-                          'Translate'
-                        )}
-                      </button>
-                    </div>
-
-                    {crTranslationErrors[feedback._id] && (
-                      <p className="mt-1 text-[9px] text-red-600">
-                        ⚠️ {crTranslationErrors[feedback._id]}
-                      </p>
-                    )}
-
-                    {crTranslations[feedback._id] && (
-                      <div className="mt-1.5 p-1.5 bg-blue-50 border border-blue-200 rounded text-[10px] text-stone-800">
-                        <div className="font-semibold text-blue-900 text-[9px] mb-0.5 flex items-center gap-1">
-                          <Languages className="w-2.5 h-2.5 text-blue-600" />
-                          {crTranslations[feedback._id].targetLanguage}
-                        </div>
-                        <p className="italic">"{crTranslations[feedback._id].text}"</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-emerald-50/70 border border-emerald-100 rounded-lg p-3">
-                  <span className="text-[11px] font-bold text-stone-800 block mb-1">Suggested Resolution</span>
-                  <p className="text-[11px] text-stone-700 leading-snug line-clamp-3">
-                    "{recommendedAction}"
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* AI DIAGNOSTIC BREAKDOWN */}
-            <div className="bg-stone-200/40 rounded-xl p-4 flex-1 flex flex-col min-h-0">
-              <h2 className="text-xs font-bold text-stone-900 mb-2 shrink-0">
-                AI Diagnostic Breakdown
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
-                {/* SEMANTIC ANALYSIS & TRANSLATION SECTION */}
-                <div className="bg-white rounded-lg p-3 shadow-xs border border-stone-200/60 flex flex-col justify-between overflow-hidden">
-                  <div className="overflow-y-auto pr-1 space-y-3">
+                  {/* CUSTOMER REPORT CARD WITH INTEGRATED TRANSLATION */}
+                  <div className="bg-stone-100/70 rounded-lg p-3 flex flex-col justify-between">
                     <div>
-                      <span className="inline-block text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 mb-1.5">
-                        {transcript.category || 'PRODUCT FEEDBACK'}
-                      </span>
-                      <h3 className="text-xs font-bold text-stone-800 mb-1">Semantic Content</h3>
-                      <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/80">
-                        <p className="text-[11px] text-stone-700 font-mono break-all leading-snug">
-                          {feedback.transcript || "No transcript text available."}
-                        </p>
-                      </div>
+                      <span className="text-[11px] font-bold text-stone-800 block mb-1">Customer Report</span>
+                      <p className="text-[11px] text-stone-600 italic leading-snug line-clamp-3">
+                        "{customerReport}"
+                      </p>
                     </div>
 
-                    {/* TRANSLATE CONTROLS */}
-                    <div className="border-t border-stone-100 pt-2.5">
-                      <label className="block text-[11px] font-semibold text-stone-600 mb-1.5">
-                        Translate to
-                      </label>
-                      <div className="flex gap-2 items-center">
+                    {/* CUSTOMER REPORT TRANSLATE CONTROLS */}
+                    <div className="mt-2.5 pt-2 border-t border-stone-200/60">
+                      <div className="flex gap-1.5 items-center">
                         <div className="relative flex-1">
                           <select
-                            value={selectedLanguageMap[feedback._id] || SUPPORTED_LANGUAGES[0]}
-                            onChange={(e) => {
-                              setSelectedLanguageMap((prev) => ({
+                            value={crSelectedLangMap[feedback._id] || SUPPORTED_LANGUAGES[0]}
+                            onChange={(e) =>
+                              setCrSelectedLangMap((prev) => ({
                                 ...prev,
                                 [feedback._id]: e.target.value,
-                              }));
-                            }}
-                            className="w-full appearance-none bg-white border border-stone-300 rounded-lg px-3 py-1.5 text-xs text-stone-800 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer pr-8"
+                              }))
+                            }
+                            className="w-full appearance-none bg-white border border-stone-300 rounded px-2 py-1 text-[10px] text-stone-800 font-medium focus:outline-none cursor-pointer pr-5"
                           >
                             {SUPPORTED_LANGUAGES.map((lang) => (
                               <option key={lang} value={lang}>
@@ -606,96 +517,184 @@ const ReportDashboard = () => {
                               </option>
                             ))}
                           </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <ChevronDown className="w-3 h-3 text-stone-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         </div>
 
                         <button
-                          onClick={() => handleTranslate(feedback)}
-                          disabled={translating[feedback._id]}
-                          className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition shadow-xs disabled:opacity-50 flex items-center gap-1.5 shrink-0 cursor-pointer"
+                          onClick={() => handleCustomerReportTranslate(feedback)}
+                          disabled={crTranslating[feedback._id]}
+                          className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[10px] rounded transition disabled:opacity-50 flex items-center gap-1 cursor-pointer shrink-0"
                         >
-                          {translating[feedback._id] ? (
-                            <>
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              Translating...
-                            </>
+                          {crTranslating[feedback._id] ? (
+                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
                           ) : (
                             'Translate'
                           )}
                         </button>
                       </div>
 
-                      {translationErrors[feedback._id] && (
-                        <p className="mt-1.5 text-[11px] text-red-600 font-medium">
-                          ⚠️ {translationErrors[feedback._id]}
+                      {crTranslationErrors[feedback._id] && (
+                        <p className="mt-1 text-[9px] text-red-600">
+                          ⚠️ {crTranslationErrors[feedback._id]}
                         </p>
+                      )}
+
+                      {crTranslations[feedback._id] && (
+                        <div className="mt-1.5 p-1.5 bg-blue-50 border border-blue-200 rounded text-[10px] text-stone-800">
+                          <div className="font-semibold text-blue-900 text-[9px] mb-0.5 flex items-center gap-1">
+                            <Languages className="w-2.5 h-2.5 text-blue-600" />
+                            {crTranslations[feedback._id].targetLanguage}
+                          </div>
+                          <p className="italic">"{crTranslations[feedback._id].text}"</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-50/70 border border-emerald-100 rounded-lg p-3">
+                    <span className="text-[11px] font-bold text-stone-800 block mb-1">Suggested Resolution</span>
+                    <p className="text-[11px] text-stone-700 leading-snug line-clamp-3">
+                      "{recommendedAction}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI DIAGNOSTIC BREAKDOWN */}
+              <div className="bg-stone-200/40 rounded-xl p-4 flex-1 flex flex-col min-h-0">
+                <h2 className="text-xs font-bold text-stone-900 mb-2 shrink-0">
+                  AI Diagnostic Breakdown
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
+                  {/* SEMANTIC ANALYSIS & TRANSLATION SECTION */}
+                  <div className="bg-white rounded-lg p-3 shadow-xs border border-stone-200/60 flex flex-col justify-between overflow-hidden">
+                    <div className="overflow-y-auto pr-1 space-y-3">
+                      <div>
+                        <span className="inline-block text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 mb-1.5">
+                          {transcript.category || 'PRODUCT FEEDBACK'}
+                        </span>
+                        <h3 className="text-xs font-bold text-stone-800 mb-1">Semantic Content</h3>
+                        <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/80">
+                          <p className="text-[11px] text-stone-700 font-mono break-all leading-snug">
+                            {feedback.transcript || "No transcript text available."}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* TRANSLATE CONTROLS */}
+                      <div className="border-t border-stone-100 pt-2.5">
+                        <label className="block text-[11px] font-semibold text-stone-600 mb-1.5">
+                          Translate to
+                        </label>
+                        <div className="flex gap-2 items-center">
+                          <div className="relative flex-1">
+                            <select
+                              value={selectedLanguageMap[feedback._id] || SUPPORTED_LANGUAGES[0]}
+                              onChange={(e) => {
+                                setSelectedLanguageMap((prev) => ({
+                                  ...prev,
+                                  [feedback._id]: e.target.value,
+                                }));
+                              }}
+                              className="w-full appearance-none bg-white border border-stone-300 rounded-lg px-3 py-1.5 text-xs text-stone-800 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer pr-8"
+                            >
+                              {SUPPORTED_LANGUAGES.map((lang) => (
+                                <option key={lang} value={lang}>
+                                  {lang}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+
+                          <button
+                            onClick={() => handleTranslate(feedback)}
+                            disabled={translating[feedback._id]}
+                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition shadow-xs disabled:opacity-50 flex items-center gap-1.5 shrink-0 cursor-pointer"
+                          >
+                            {translating[feedback._id] ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Translating...
+                              </>
+                            ) : (
+                              'Translate'
+                            )}
+                          </button>
+                        </div>
+
+                        {translationErrors[feedback._id] && (
+                          <p className="mt-1.5 text-[11px] text-red-600 font-medium">
+                            ⚠️ {translationErrors[feedback._id]}
+                          </p>
+                        )}
+                      </div>
+
+                      {translations[feedback._id] && (
+                        <div className="mt-2 p-2.5 bg-blue-50/70 border border-blue-200/70 rounded-lg">
+                          <div className="flex items-center gap-1.5 mb-1 text-blue-900 font-semibold text-[11px]">
+                            <Languages className="w-3.5 h-3.5 text-blue-600" />
+                            {translations[feedback._id].targetLanguage} Translation
+                          </div>
+                          <p className="text-[11px] text-stone-800 leading-snug font-medium">
+                            {translations[feedback._id].text}
+                          </p>
+                        </div>
                       )}
                     </div>
 
-                    {translations[feedback._id] && (
-                      <div className="mt-2 p-2.5 bg-blue-50/70 border border-blue-200/70 rounded-lg">
-                        <div className="flex items-center gap-1.5 mb-1 text-blue-900 font-semibold text-[11px]">
-                          <Languages className="w-3.5 h-3.5 text-blue-600" />
-                          {translations[feedback._id].targetLanguage} Translation
-                        </div>
-                        <p className="text-[11px] text-stone-800 leading-snug font-medium">
-                          {translations[feedback._id].text}
-                        </p>
-                      </div>
-                    )}
+                    <div className="text-[10px] text-stone-600 space-y-0.5 font-medium border-t border-stone-100 pt-2 shrink-0 mt-2">
+                      <p>Semantic Confidence: {((metrics.confidence_scores?.semantic_confidence || 0) * 100).toFixed(0)}%</p>
+                      <p>Acoustic Confidence: {((metrics.confidence_scores?.acoustic_confidence || audio.audio_score || 0) * 100).toFixed(0)}%</p>
+                    </div>
                   </div>
 
-                  <div className="text-[10px] text-stone-600 space-y-0.5 font-medium border-t border-stone-100 pt-2 shrink-0 mt-2">
-                    <p>Semantic Confidence: {((metrics.confidence_scores?.semantic_confidence || 0) * 100).toFixed(0)}%</p>
-                    <p>Acoustic Confidence: {((metrics.confidence_scores?.acoustic_confidence || audio.audio_score || 0) * 100).toFixed(0)}%</p>
-                  </div>
-                </div>
+                  {/* ACOUSTIC ANALYSIS */}
+                  <div className="bg-white rounded-lg p-3 shadow-xs border border-stone-200/60 flex flex-col justify-between overflow-hidden min-h-[200px]">
+                    <div className="flex flex-col h-full overflow-hidden">
+                      <span className="inline-block text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 mb-1.5 shrink-0">
+                        AUDIO / EMOTION ANALYSIS
+                      </span>
+                      <h3 className="text-xs font-bold text-stone-800 mb-2 shrink-0">Sentiment Breakdown</h3>
 
-                {/* ACOUSTIC ANALYSIS */}
-                <div className="bg-white rounded-lg p-3 shadow-xs border border-stone-200/60 flex flex-col justify-between overflow-hidden min-h-[200px]">
-                  <div className="flex flex-col h-full overflow-hidden">
-                    <span className="inline-block text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 mb-1.5 shrink-0">
-                      AUDIO / EMOTION ANALYSIS
-                    </span>
-                    <h3 className="text-xs font-bold text-stone-800 mb-2 shrink-0">Sentiment Breakdown</h3>
-
-                    <div className="space-y-2 overflow-y-auto flex-1 pr-1">
-                      {typeof audio.audio_score === 'number' && (
-                        <div>
-                          <div className="flex justify-between text-[10px] mb-0.5 font-medium">
-                            <span className="text-stone-700">Primary ({dominantLabel})</span>
-                            <span className="text-stone-900 font-bold">{(audio.audio_score * 100).toFixed(1)}%</span>
-                          </div>
-                          <div className="w-full bg-stone-100 rounded-full h-1">
-                            <div className="bg-purple-500 h-1 rounded-full" style={{ width: `${audio.audio_score * 100}%` }} />
-                          </div>
-                        </div>
-                      )}
-
-                      {distributionEntries.map(([label, score]) => {
-                        const percentage = score <= 1 ? score * 100 : score;
-                        const mappedLabel = EMOTION_LABEL_MAP[label.toLowerCase()] || label;
-                        return (
-                          <div key={label}>
+                      <div className="space-y-2 overflow-y-auto flex-1 pr-1">
+                        {typeof audio.audio_score === 'number' && (
+                          <div>
                             <div className="flex justify-between text-[10px] mb-0.5 font-medium">
-                              <span className="text-stone-700 truncate">{mappedLabel}</span>
-                              <span className="text-stone-900 font-bold">{percentage.toFixed(1)}%</span>
+                              <span className="text-stone-700">Primary ({dominantLabel})</span>
+                              <span className="text-stone-900 font-bold">{(audio.audio_score * 100).toFixed(1)}%</span>
                             </div>
                             <div className="w-full bg-stone-100 rounded-full h-1">
-                              <div className="bg-purple-500 h-1 rounded-full" style={{ width: `${Math.min(percentage, 100)}%` }} />
+                              <div className="bg-purple-500 h-1 rounded-full" style={{ width: `${audio.audio_score * 100}%` }} />
                             </div>
                           </div>
-                        );
-                      })}
+                        )}
+
+                        {distributionEntries.map(([label, score]) => {
+                          const percentage = score <= 1 ? score * 100 : score;
+                          const mappedLabel = EMOTION_LABEL_MAP[label.toLowerCase()] || label;
+                          return (
+                            <div key={label}>
+                              <div className="flex justify-between text-[10px] mb-0.5 font-medium">
+                                <span className="text-stone-700 truncate">{mappedLabel}</span>
+                                <span className="text-stone-900 font-bold">{percentage.toFixed(1)}%</span>
+                              </div>
+                              <div className="w-full bg-stone-100 rounded-full h-1">
+                                <div className="bg-purple-500 h-1 rounded-full" style={{ width: `${Math.min(percentage, 100)}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
+            </>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
