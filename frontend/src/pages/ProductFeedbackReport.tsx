@@ -10,8 +10,9 @@ import {
   Loader2 as Loader,
   Clock,
   Inbox,
+  Volume2,
 } from 'lucide-react';
-import { productFeedbackAPI, feedbackAPI } from '@/lib/api';
+import { productFeedbackAPI, feedbackAPI, merchantOrderAPI } from '@/lib/api';
 
 // Label mappings for raw acoustic emotion distributions
 const EMOTION_LABEL_MAP = {
@@ -96,6 +97,11 @@ const ReportDashboard = () => {
   const [crTranslations, setCrTranslations] = useState({});
   const [crTranslating, setCrTranslating] = useState({});
   const [crTranslationErrors, setCrTranslationErrors] = useState({});
+
+  // Audio Player States
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [audioError, setAudioError] = useState(null);
 
   // Core data fetching logic
   const fetchFeedbackAndMetadata = useCallback(
@@ -192,6 +198,54 @@ const ReportDashboard = () => {
       setSelectedIndex(0);
     }
   }, [filteredFeedbacks.length, selectedIndex]);
+
+  // Active selected feedback from filtered list (if available)
+  const feedback = filteredFeedbacks[selectedIndex] || filteredFeedbacks[0] || {};
+  const gridfsFileId = feedback.gridfs_file_id || feedback.audio_analysis?.gridfs_file_id || feedback.metadata?.gridfs_file_id;
+
+  // Fetch signed audio URL when active feedback changes
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchAudioSignedUrl = async () => {
+      if (!gridfsFileId) {
+        setAudioUrl(null);
+        setAudioError(null);
+        return;
+      }
+
+      try {
+        setAudioLoading(true);
+        setAudioError(null);
+
+        const response = await merchantOrderAPI.getMediaFiles(gridfsFileId);
+        const signedUrl = response?.fileData?.signed_url || response?.data?.fileData?.signed_url;
+
+        if (isMounted) {
+          if (signedUrl) {
+            setAudioUrl(signedUrl);
+          } else {
+            setAudioError('Audio file URL not available.');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch audio media file:', err);
+        if (isMounted) {
+          setAudioError('Failed to load audio recording.');
+        }
+      } finally {
+        if (isMounted) {
+          setAudioLoading(false);
+        }
+      }
+    };
+
+    fetchAudioSignedUrl();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [gridfsFileId, feedback._id]);
 
   // Dynamic Translate Handler for Semantic Content
   const handleTranslate = async (feedback) => {
@@ -290,9 +344,6 @@ const ReportDashboard = () => {
     );
 
   if (error) return <div className="h-screen flex items-center justify-center text-red-600 font-sans">{error}</div>;
-
-  // Active selected feedback from filtered list (if available)
-  const feedback = filteredFeedbacks[selectedIndex] || filteredFeedbacks[0] || {};
 
   const meta = feedback.metadata || {};
   const metrics = feedback.dashboard_metrics || {};
@@ -650,7 +701,7 @@ const ReportDashboard = () => {
                     </div>
                   </div>
 
-                  {/* ACOUSTIC ANALYSIS */}
+                  {/* ACOUSTIC ANALYSIS & AUDIO PLAYER */}
                   <div className="bg-white rounded-lg p-3 shadow-xs border border-stone-200/60 flex flex-col justify-between overflow-hidden min-h-[200px]">
                     <div className="flex flex-col h-full overflow-hidden">
                       <span className="inline-block text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 mb-1.5 shrink-0">
@@ -687,6 +738,33 @@ const ReportDashboard = () => {
                           );
                         })}
                       </div>
+
+                      {/* AUDIO PLAYER SECTION BELOW ANALYSIS */}
+                      <div className="mt-3 pt-2.5 border-t border-stone-100 shrink-0">
+                        <div className="flex items-center gap-1.5 mb-1.5 text-stone-800 font-semibold text-[11px]">
+                          <Volume2 className="w-3.5 h-3.5 text-stone-600" />
+                          Audio Recording
+                        </div>
+
+                        {audioLoading ? (
+                          <div className="flex items-center gap-2 p-2 bg-stone-50 rounded-lg text-xs text-stone-500">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                            Fetching audio file...
+                          </div>
+                        ) : audioError ? (
+                          <p className="text-[10px] text-red-600 font-medium">⚠️ {audioError}</p>
+                        ) : audioUrl ? (
+                          <audio
+                            controls
+                            src={audioUrl}
+                            className="w-full h-8 rounded-lg outline-none focus:ring-0"
+                          >
+                            Your browser does not support the audio element.
+                          </audio>
+                        ) : (
+                          <p className="text-[10px] text-stone-400 italic">No audio file attached.</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -694,6 +772,7 @@ const ReportDashboard = () => {
             </>
           )}
         </div>
+
       </div>
     </div>
   );
