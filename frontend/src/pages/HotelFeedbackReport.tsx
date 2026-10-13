@@ -96,7 +96,7 @@ const ReportDashboard = () => {
 
     try {
       setTranslating((prev) => ({ ...prev, [feedback._id]: true }));
-      const response = await feedbackAPI.translateToEnglish(feedback.transcript, 'English');
+      const response = await feedbackAPI.translateText(feedback.transcript, 'English');
       const translation = response?.data?.english_translation;
 
       if (translation) {
@@ -116,54 +116,54 @@ const ReportDashboard = () => {
     }
   };
 
-  const handleMarkAsResolved = async (feedback) => {
-    const feedbackId = feedback._id;
-    setResolvingMap((prev) => ({ ...prev, [feedbackId]: true }));
+  // const handleMarkAsResolved = async (feedback) => {
+  //   const feedbackId = feedback._id;
+  //   setResolvingMap((prev) => ({ ...prev, [feedbackId]: true }));
 
-    const payload = {
-      qrId: qrId || feedback.qr_id || '',
-      room: feedback.room_number || 'N/A',
-      urgency_status: 'low',
-      is_resolved: true,
-      last_updated: new Date().toISOString(),
-    };
+  //   const payload = {
+  //     qrId: qrId || feedback.qr_id || '',
+  //     room: feedback.room_number || 'N/A',
+  //     urgency_status: 'low',
+  //     is_resolved: true,
+  //     last_updated: new Date().toISOString(),
+  //   };
 
-    try {
-      const response = await fetch(
-        'http://localhost:8004/api/text-analysis/feedback-metadata/',
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
-      const result = await response.json();
+  //   try {
+  //     const response = await fetch(
+  //       'http://localhost:8004/api/text-analysis/feedback-metadata/',
+  //       {
+  //         method: 'PUT',
+  //         headers: { 'Content-Type': 'application/json' },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+  //     const result = await response.json();
 
-      if (response.ok && result.modifiedCount > 0) {
-        setFeedbacks((prev) =>
-          prev.map((item) =>
-            item._id === feedbackId
-              ? {
-                  ...item,
-                  metadata: {
-                    ...item.metadata,
-                    is_resolved: true,
-                    urgency_status: 'low',
-                    last_updated: payload.last_updated,
-                  },
-                }
-              : item
-          )
-        );
-      } else {
-        console.error('Failed to update resolution status:', response.statusText);
-      }
-    } catch (err) {
-      console.error('Error marking feedback as resolved:', err);
-    } finally {
-      setResolvingMap((prev) => ({ ...prev, [feedbackId]: false }));
-    }
-  };
+  //     if (response.ok && result.modifiedCount > 0) {
+  //       setFeedbacks((prev) =>
+  //         prev.map((item) =>
+  //           item._id === feedbackId
+  //             ? {
+  //                 ...item,
+  //                 metadata: {
+  //                   ...item.metadata,
+  //                   is_resolved: true,
+  //                   urgency_status: 'low',
+  //                   last_updated: payload.last_updated,
+  //                 },
+  //               }
+  //             : item
+  //         )
+  //       );
+  //     } else {
+  //       console.error('Failed to update resolution status:', response.statusText);
+  //     }
+  //   } catch (err) {
+  //     console.error('Error marking feedback as resolved:', err);
+  //   } finally {
+  //     setResolvingMap((prev) => ({ ...prev, [feedbackId]: false }));
+  //   }
+  // };
 
   if (loading) return <div className="p-6 text-center">Loading feedback...</div>;
   if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
@@ -208,11 +208,31 @@ const ReportDashboard = () => {
     return <CheckCircle className="w-8 h-8 text-green-600" />;
   };
 
-  const formatDateTime = (timestamp) => {
-    if (!timestamp || timestamp === 'Invalid Date') return 'N/A';
-    const parsedDate = new Date(timestamp);
-    return isNaN(parsedDate.getTime()) ? timestamp : parsedDate.toLocaleString();
-  };
+  
+const formatDateTime = (timestamp: string | Date | null | undefined) => {
+  if (!timestamp) return 'N/A';
+
+  // Remove an invalid duplicate Z when a timezone offset is already present.
+  const normalizedTimestamp =
+    typeof timestamp === 'string'
+      ? timestamp.replace(/([+-]\d{2}:\d{2})Z$/, '$1')
+      : timestamp;
+
+  const parsedDate = new Date(normalizedTimestamp);
+
+  if (isNaN(parsedDate.getTime())) return 'N/A';
+
+  return parsedDate.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+};
+
 
   const formatEmotion = (emotion) => {
     if (!emotion) return 'Unknown';
@@ -300,7 +320,7 @@ const ReportDashboard = () => {
                     </div>
 
                     {/* RESOLUTION STATUS */}
-                    {isResolved ? (
+                    {/* {isResolved ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-100 text-green-800 font-semibold text-xs border border-green-300">
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
                         Resolved
@@ -323,7 +343,7 @@ const ReportDashboard = () => {
                           </>
                         )}
                       </button>
-                    )}
+                    )} */}
                   </div>
                 </div>
 

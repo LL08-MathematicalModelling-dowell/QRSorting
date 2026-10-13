@@ -11,7 +11,7 @@ export async function getFeedbacksByDate(req, res) {
         const date = req.query.date;
         // const clientName = req.query.clientName.toLowerCase();
         const collId = qrId.slice(-4)
-        const filters = {"type": "feedback", "submitted_at": {"$gte": date + "T00:00:00.000Z", "$lte": date + "T23:59:59.999Z"}};
+        const filters = {"type": "hotel_feedback", "submitted_at": {"$gte": date + "T00:00:00.000Z", "$lte": date + "T23:59:59.999Z"}};
         console.log("Filters:", filters);
         const results = await datacube.dataRetrieval(process.env.MASTER_DATABASE_ID, collId, JSON.stringify(filters));
         console.log(results)
