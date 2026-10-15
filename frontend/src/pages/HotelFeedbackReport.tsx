@@ -50,7 +50,7 @@ const ReportDashboard = () => {
           feedbackList.map(async (feedback) => {
             try {
               const metaRes = await fetch(
-                `http://localhost:8004/api/text-analysis/feedback-metadata/?qrId=${qrId}&feedbackId=${feedback._id}`,
+                `https://reviewanalysis.uxlivinglab.org/text-analysis/feedback-metadata/?qrId=${qrId}&feedbackId=${feedback._id}`,
                 {
                   method: 'GET',
                   headers: { 'Content-Type': 'application/json' },
@@ -72,14 +72,18 @@ const ReportDashboard = () => {
           })
         );
 
-        // Sort newest -> oldest based on metadata date (fallback to feedback date)
-        const sortedFeedbacks = [...feedbacksWithMetadata].sort(
-          (a, b) =>
-            new Date(b.metadata?.submitted_at || b.metadata?.date || b.submitted_at) -
-            new Date(a.metadata?.submitted_at || a.metadata?.date || a.submitted_at)
-        );
+        // Robust sort newest -> oldest with NaN protection
+        const sortedFeedbacks = [...feedbacksWithMetadata].sort((a, b) => {
+          const rawA = a.metadata?.submitted_at || a.metadata?.date || a.submitted_at;
+          const rawB = b.metadata?.submitted_at || b.metadata?.date || b.submitted_at;
+          
+          const timeA = rawA ? new Date(rawA).getTime() : 0;
+          const timeB = rawB ? new Date(rawB).getTime() : 0;
 
-        setFeedbacks(sortedFeedbacks);
+          return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+        });
+
+        setFeedbacks(sortedFeedbacks.reverse()); // Reverse to show oldest first
       } catch (err) {
         console.error('Error fetching feedback:', err);
         setError('No feedback found for this QR code today.');
@@ -116,55 +120,6 @@ const ReportDashboard = () => {
     }
   };
 
-  // const handleMarkAsResolved = async (feedback) => {
-  //   const feedbackId = feedback._id;
-  //   setResolvingMap((prev) => ({ ...prev, [feedbackId]: true }));
-
-  //   const payload = {
-  //     qrId: qrId || feedback.qr_id || '',
-  //     room: feedback.room_number || 'N/A',
-  //     urgency_status: 'low',
-  //     is_resolved: true,
-  //     last_updated: new Date().toISOString(),
-  //   };
-
-  //   try {
-  //     const response = await fetch(
-  //       'http://localhost:8004/api/text-analysis/feedback-metadata/',
-  //       {
-  //         method: 'PUT',
-  //         headers: { 'Content-Type': 'application/json' },
-  //         body: JSON.stringify(payload),
-  //       }
-  //     );
-  //     const result = await response.json();
-
-  //     if (response.ok && result.modifiedCount > 0) {
-  //       setFeedbacks((prev) =>
-  //         prev.map((item) =>
-  //           item._id === feedbackId
-  //             ? {
-  //                 ...item,
-  //                 metadata: {
-  //                   ...item.metadata,
-  //                   is_resolved: true,
-  //                   urgency_status: 'low',
-  //                   last_updated: payload.last_updated,
-  //                 },
-  //               }
-  //             : item
-  //         )
-  //       );
-  //     } else {
-  //       console.error('Failed to update resolution status:', response.statusText);
-  //     }
-  //   } catch (err) {
-  //     console.error('Error marking feedback as resolved:', err);
-  //   } finally {
-  //     setResolvingMap((prev) => ({ ...prev, [feedbackId]: false }));
-  //   }
-  // };
-
   if (loading) return <div className="p-6 text-center">Loading feedback...</div>;
   if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
 
@@ -179,7 +134,8 @@ const ReportDashboard = () => {
     );
   }
 
-  const displayedFeedbacks = filter === 'latest' ? [feedbacks[0]] : feedbacks;
+  // When "latest" is selected, show only the most recent feedback item at index 0. When "all", show the full sorted list.
+  const displayedFeedbacks = filter === 'latest' ? [feedbacks[0]].filter(Boolean) : feedbacks;
 
   const getColorClasses = (color) => {
     switch (color) {
@@ -208,31 +164,28 @@ const ReportDashboard = () => {
     return <CheckCircle className="w-8 h-8 text-green-600" />;
   };
 
-  
-const formatDateTime = (timestamp: string | Date | null | undefined) => {
-  if (!timestamp) return 'N/A';
+  const formatDateTime = (timestamp: string | Date | null | undefined) => {
+    if (!timestamp) return 'N/A';
 
-  // Remove an invalid duplicate Z when a timezone offset is already present.
-  const normalizedTimestamp =
-    typeof timestamp === 'string'
-      ? timestamp.replace(/([+-]\d{2}:\d{2})Z$/, '$1')
-      : timestamp;
+    const normalizedTimestamp =
+      typeof timestamp === 'string'
+        ? timestamp.replace(/([+-]\d{2}:\d{2})Z$/, '$1')
+        : timestamp;
 
-  const parsedDate = new Date(normalizedTimestamp);
+    const parsedDate = new Date(normalizedTimestamp);
 
-  if (isNaN(parsedDate.getTime())) return 'N/A';
+    if (isNaN(parsedDate.getTime())) return 'N/A';
 
-  return parsedDate.toLocaleString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-};
-
+    return parsedDate.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+  };
 
   const formatEmotion = (emotion) => {
     if (!emotion) return 'Unknown';
@@ -275,15 +228,12 @@ const formatDateTime = (timestamp: string | Date | null | undefined) => {
           const transcript = feedback.transcript_analysis || {};
           const rawDistribution = feedback.raw_emotion_distribution || {};
 
-          // Metadata Priority Mapping
           const roomNumber = meta.room_number || meta.room || feedback.room_number || 'N/A';
           const submittedAt = meta.submitted_at || meta.date || meta.timestamp || feedback.submitted_at;
           const severity = meta.urgency_status || meta.severity || metrics.severity || audio.severity || 'low';
-          const isResolved = meta.is_resolved ?? feedback.is_resolved ?? false;
           
           const aiAssessment = metrics.ai_assessment_remark || 'No assessment available.';
           const recommendedAction = metrics.recommended_action || 'No recommendation available.';
-          const isResolving = resolvingMap[feedback._id] || false;
 
           return (
             <div key={feedback._id} className="border-b border-gray-200 pb-8">
@@ -318,32 +268,6 @@ const formatDateTime = (timestamp: string | Date | null | undefined) => {
                       <Clock className="w-4 h-4" />
                       {formatDateTime(submittedAt)}
                     </div>
-
-                    {/* RESOLUTION STATUS */}
-                    {/* {isResolved ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-100 text-green-800 font-semibold text-xs border border-green-300">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        Resolved
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleMarkAsResolved(feedback)}
-                        disabled={isResolving}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-medium text-xs shadow-sm disabled:opacity-50 transition cursor-pointer"
-                      >
-                        {isResolving ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Updating...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="w-4 h-4" />
-                            Mark as Resolved
-                          </>
-                        )}
-                      </button>
-                    )} */}
                   </div>
                 </div>
 
