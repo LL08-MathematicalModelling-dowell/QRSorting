@@ -159,9 +159,8 @@ const ReportDashboard = () => {
         setError(null);
       } catch (err) {
         console.error('Error fetching feedback:', err);
-        if (isInitial) {
-          setError('No feedback found for this QR code today.');
-        }
+        setFeedbacks([]);
+        setError(null);
       } finally {
         setLoading(false);
         setIsRefreshing(false);
