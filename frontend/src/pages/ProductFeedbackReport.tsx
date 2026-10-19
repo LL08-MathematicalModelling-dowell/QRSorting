@@ -11,6 +11,7 @@ import {
   Clock,
   Inbox,
   Volume2,
+  QrCode,
 } from 'lucide-react';
 import { productFeedbackAPI, feedbackAPI, merchantOrderAPI } from '@/lib/api';
 
@@ -76,8 +77,8 @@ const getFormattedTimeString = (dateString) => {
 
 const ReportDashboard = () => {
   const [searchParams] = useSearchParams();
-  const id = searchParams.get('id');
-  const qrId = id ? id.slice(0, 4) : '';
+  const rawId = searchParams.get('id') || '';
+  const qrId = rawId ? rawId.slice(0, 4) : '';
 
   const [feedbacks, setFeedbacks] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -107,7 +108,7 @@ const ReportDashboard = () => {
   const fetchFeedbackAndMetadata = useCallback(
     async (isInitial = false) => {
       if (!qrId) {
-        setError('QR code ID is missing.');
+        setError('QR code ID is missing from URL.');
         setLoading(false);
         return;
       }
@@ -158,7 +159,7 @@ const ReportDashboard = () => {
         setFeedbacks(sortedFeedbacks);
         setError(null);
       } catch (err) {
-        console.error('Error fetching feedback:', err);
+        console.warn('Feedback API returned 404 or no records found:', err);
         setFeedbacks([]);
         setError(null);
       } finally {
@@ -430,6 +431,14 @@ const ReportDashboard = () => {
             Live (3s)
           </span>
 
+          {/* DISPLAY QR CODE ID FROM URL */}
+          {rawId && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-stone-700 bg-white border border-stone-200 rounded-lg shadow-xs">
+              <QrCode className="w-3.5 h-3.5 text-stone-500" />
+              QR Code ID: <span className="font-bold text-stone-900">{rawId}</span>
+            </span>
+          )}
+
           {/* TIME INTERVAL FILTER DROPDOWN */}
           <div className="relative">
             <select
@@ -502,10 +511,10 @@ const ReportDashboard = () => {
                 <Inbox className="w-6 h-6 text-stone-400" />
               </div>
               <h3 className="text-sm font-bold text-stone-800 mb-1">
-                No Feedback Reports
+                No Feedback Reports Found
               </h3>
               <p className="text-xs text-stone-500 max-w-xs leading-relaxed">
-                No reports found for the selected time interval ({selectedIntervalLabel}).
+                No reports found for this QR code in the selected time interval ({selectedIntervalLabel}).
               </p>
             </div>
           ) : (
