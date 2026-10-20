@@ -438,7 +438,7 @@ const ReportDashboard = () => {
 
   // Construct dynamic Map URL based on selected time interval
   const mapBaseUrl = import.meta.env.VITE_PURETRACE_MAP;
-  const dynamicMapUrl = `${mapBaseUrl}?type=puretrace&time=${daysParam}`;
+  const dynamicMapUrl = `${mapBaseUrl}&time=${daysParam}`;
 
   return (
     <div className="min-h-screen lg:h-screen w-screen bg-[#FAF7F2] p-4 sm:p-6 pb-8 font-sans text-stone-800 flex flex-col overflow-y-auto lg:overflow-hidden box-border relative">
