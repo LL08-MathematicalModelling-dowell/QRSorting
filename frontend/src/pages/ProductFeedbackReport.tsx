@@ -11,7 +11,6 @@ import {
   Clock,
   Inbox,
   Volume2,
-  QrCode,
 } from 'lucide-react';
 import { productFeedbackAPI, feedbackAPI, merchantOrderAPI } from '@/lib/api';
 
@@ -42,12 +41,12 @@ const SUPPORTED_LANGUAGES = [
   'Urdu',
 ];
 
-// Time Interval Options (in hours)
+// Time Interval Options (in hours and equivalent days for map URL params)
 const TIME_INTERVALS = [
-  { label: '24 hours', hours: 24 },
-  { label: 'Last 7 days', hours: 24 * 7 },
-  { label: 'Last 15 days', hours: 24 * 15 },
-  { label: 'Last 30 days', hours: 24 * 30 },
+  { label: '24 hours', hours: 24, daysParam: 1 },
+  { label: 'Last 7 days', hours: 24 * 7, daysParam: 7 },
+  { label: 'Last 15 days', hours: 24 * 15, daysParam: 15 },
+  { label: 'Last 30 days', hours: 24 * 30, daysParam: 30 },
 ];
 
 // Helper function to parse ISO timestamps with trailing malformed zone indicators
@@ -87,6 +86,12 @@ const ReportDashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
+  // Client Metadata State
+  const [clientInfo, setClientInfo] = useState({
+    clientName: null,
+    splashLogoUrl: null,
+  });
+
   // Semantic Translation States
   const [selectedLanguageMap, setSelectedLanguageMap] = useState({});
   const [translations, setTranslations] = useState({});
@@ -103,6 +108,38 @@ const ReportDashboard = () => {
   const [audioUrl, setAudioUrl] = useState(null);
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioError, setAudioError] = useState(null);
+
+  // Fetch Client Info once on mount
+  useEffect(() => {
+    if (!rawId) return;
+
+    let isMounted = true;
+    const fetchClientInfo = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_CLIENT_INFO_API}${rawId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && isMounted) {
+            const rawClientName = data.client_name || '';
+            const parsedName = rawClientName.split(',')[0].trim();
+
+            setClientInfo({
+              clientName: parsedName || null,
+              splashLogoUrl: data.splash_logo_url || null,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch client information:', err);
+      }
+    };
+
+    fetchClientInfo();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [rawId]);
 
   // Core data fetching logic
   const fetchFeedbackAndMetadata = useCallback(
@@ -149,7 +186,6 @@ const ReportDashboard = () => {
           })
         );
 
-        // Sort descending by submitted_at date (latest feedback first)
         const sortedFeedbacks = [...feedbacksWithMetadata].sort((a, b) => {
           const dateA = parseTimestamp(a.submitted_at || a.metadata?.submitted_at || a.metadata?.date) || new Date(0);
           const dateB = parseTimestamp(b.submitted_at || b.metadata?.submitted_at || b.metadata?.date) || new Date(0);
@@ -180,30 +216,26 @@ const ReportDashboard = () => {
     return () => clearInterval(intervalId);
   }, [fetchFeedbackAndMetadata]);
 
-  // Filter feedbacks based on the selected time interval
   const filteredFeedbacks = useMemo(() => {
     const now = Date.now();
     const cutoffTime = now - selectedIntervalHours * 60 * 60 * 1000;
 
     return feedbacks.filter((item) => {
       const itemDate = parseTimestamp(item.submitted_at || item.metadata?.submitted_at || item.metadata?.date);
-      if (!itemDate) return true; // keep if date parsing fails
+      if (!itemDate) return true;
       return itemDate.getTime() >= cutoffTime;
     });
   }, [feedbacks, selectedIntervalHours]);
 
-  // Ensure index remains valid if length changes due to filtering
   useEffect(() => {
     if (selectedIndex >= filteredFeedbacks.length) {
       setSelectedIndex(0);
     }
   }, [filteredFeedbacks.length, selectedIndex]);
 
-  // Active selected feedback from filtered list (if available)
   const feedback = filteredFeedbacks[selectedIndex] || filteredFeedbacks[0] || {};
-  const gridfsFileId = feedback.gridfs_file_id || feedback.audio_analysis?.gridfs_file_id || feedback.metadata?.gridfs_file_id;
+  const gridfsFileId = feedback.gridfs_file_id;
 
-  // Fetch signed audio URL when active feedback changes
   useEffect(() => {
     let isMounted = true;
 
@@ -219,11 +251,11 @@ const ReportDashboard = () => {
         setAudioError(null);
 
         const response = await merchantOrderAPI.getMediaFiles(gridfsFileId);
-        const signedUrl = response?.fileData?.signed_url || response?.data?.fileData?.signed_url;
+        const signedUrl = response?.data?.signed_url;
 
         if (isMounted) {
           if (signedUrl) {
-            setAudioUrl(signedUrl);
+            setAudioUrl(`${import.meta.env.VITE_DATACUBE_DOMAIN}${signedUrl}`);
           } else {
             setAudioError('Audio file URL not available.');
           }
@@ -247,7 +279,6 @@ const ReportDashboard = () => {
     };
   }, [gridfsFileId, feedback._id]);
 
-  // Dynamic Translate Handler for Semantic Content
   const handleTranslate = async (feedback) => {
     const feedbackId = feedback._id;
     const defaultPlaceholderText = "No transcript text available.";
@@ -291,7 +322,6 @@ const ReportDashboard = () => {
     }
   };
 
-  // Dynamic Translate Handler for Customer Report Card
   const handleCustomerReportTranslate = async (feedback) => {
     const feedbackId = feedback._id;
     const defaultPlaceholderText = "No report text provided.";
@@ -376,14 +406,13 @@ const ReportDashboard = () => {
     return 'border-l-emerald-500';
   };
 
-  // Render Selector Component to reuse between Mobile & Desktop locations
   const renderFeedbackSelector = (extraClasses = '') => (
     filteredFeedbacks.length > 0 && (
       <div className={`relative ${extraClasses}`}>
         <select
           value={selectedIndex}
           onChange={(e) => setSelectedIndex(Number(e.target.value))}
-          className="w-full lg:w-auto appearance-none bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-medium text-xs rounded-lg pl-3 pr-8 py-2 lg:py-1.5 focus:outline-none cursor-pointer shadow-xs transition"
+          className="w-full lg:w-auto appearance-none bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-medium text-xs rounded-lg pl-3 pr-8 py-1.5 focus:outline-none cursor-pointer shadow-xs transition"
         >
           {filteredFeedbacks.map((item, idx) => {
             const dateStr = item.submitted_at || item.metadata?.submitted_at || item.metadata?.date;
@@ -403,74 +432,106 @@ const ReportDashboard = () => {
     )
   );
 
-  const selectedIntervalLabel = TIME_INTERVALS.find(i => i.hours === selectedIntervalHours)?.label || `${selectedIntervalHours} hours`;
+  const selectedOption = TIME_INTERVALS.find((i) => i.hours === selectedIntervalHours) || TIME_INTERVALS[0];
+  const selectedIntervalLabel = selectedOption.label;
+  const daysParam = selectedOption.daysParam;
+
+  // Construct dynamic Map URL based on selected time interval
+  const mapBaseUrl = import.meta.env.VITE_PURETRACE_MAP;
+  const dynamicMapUrl = `${mapBaseUrl}?type=puretrace&time=${daysParam}`;
 
   return (
-    <div className="min-h-screen lg:h-screen w-screen bg-[#FAF7F2] p-4 sm:p-6 font-sans text-stone-800 flex flex-col overflow-y-auto lg:overflow-hidden box-border">
-      {/* HEADER */}
-      <div className="flex justify-between items-center pb-3 border-b border-stone-200/80 shrink-0 gap-2 flex-wrap sm:flex-nowrap">
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <img
-              src="/puretrace-logo.png"
-              alt="PureTrace"
-              className="h-7 w-auto object-contain hidden sm:block"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
-            <span className="text-xl font-black tracking-wider uppercase font-sans">
-              <span className="text-stone-600">PURE</span>
-              <span className="text-[#32D583]">TRACE</span>
-            </span>
-            <span className="text-md text-blue-800 font-bold pl-1 border-l border-stone-300 hidden md:inline">
-              Dashboard
-            </span>
+    <div className="min-h-screen lg:h-screen w-screen bg-[#FAF7F2] p-4 sm:p-6 pb-8 font-sans text-stone-800 flex flex-col overflow-y-auto lg:overflow-hidden box-border relative">
+      
+      {/* TWO-LEVEL HEADER */}
+      <header className="shrink-0 border-b border-stone-200/80 pb-3 mb-3">
+        {/* ROW 1: BRANDING & PRIMARY METADATA */}
+        <div className="flex justify-between items-center pb-2 flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            {clientInfo.splashLogoUrl ? (
+              <img
+                src={clientInfo.splashLogoUrl}
+                alt={clientInfo.clientName || 'Client Logo'}
+                className="h-7 max-w-[130px] object-contain hidden sm:block"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            ) : (
+              <img
+                src="/puretrace-logo.png"
+                alt="PureTrace"
+                className="h-7 w-auto object-contain hidden sm:block"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            )}
+
+            <div className="flex items-center gap-2">
+              {clientInfo.clientName ? (
+                <span className="text-base font-bold text-stone-900 tracking-tight">
+                  {clientInfo.clientName}
+                </span>
+              ) : (
+                <span className="text-xl font-black tracking-wider uppercase">
+                  <span className="text-stone-600">PURE</span>
+                  <span className="text-[#32D583]">TRACE</span>
+                </span>
+              )} |
+              <span className="text-xs font-bold px-2 py-0.5 text-blue-800 border border-blue-100 hidden sm:inline">
+                Dashboard
+              </span>
+            </div>
           </div>
 
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-full">
-            <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Live (3s)
-          </span>
-
-          {/* DISPLAY QR CODE ID FROM URL */}
-          {rawId && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-stone-700 bg-white border border-stone-200 rounded-lg shadow-xs">
-              <QrCode className="w-3.5 h-3.5 text-stone-500" />
-              QR Code ID: <span className="font-bold text-stone-900">{rawId}</span>
+          <div className="flex items-center gap-3 text-xs text-stone-500 font-medium">
+            <span className="inline-flex items-center gap-1 text-emerald-700 font-medium bg-emerald-50/80 border border-emerald-200/60 rounded-md px-2 py-0.5">
+              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Live (3s)
             </span>
-          )}
+            {rawId && (
+              <span className="bg-stone-100 border border-stone-200 rounded-md px-2 py-0.5 text-stone-700">
+                QR Code ID: <strong className="text-stone-900">{rawId}</strong>
+              </span>
+            )}
+          </div>
+        </div>
 
-          {/* TIME INTERVAL FILTER DROPDOWN */}
-          <div className="relative">
-            <select
-              value={selectedIntervalHours}
-              onChange={(e) => setSelectedIntervalHours(Number(e.target.value))}
-              className="appearance-none bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-semibold text-xs rounded-lg pl-7 pr-8 py-1.5 focus:outline-none cursor-pointer shadow-xs transition"
-            >
-              {TIME_INTERVALS.map((opt) => (
-                <option key={opt.hours} value={opt.hours}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <Clock className="w-3.5 h-3.5 text-stone-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <ChevronDown className="w-3.5 h-3.5 text-stone-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+        {/* ROW 2: ACTION TOOLBAR & SUMMARY */}
+        <div className="flex justify-between items-center pt-2 border-t border-stone-100 flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-stone-500 font-medium">
+              Timeframe:
+            </span>
+            <div className="relative">
+              <select
+                value={selectedIntervalHours}
+                onChange={(e) => setSelectedIntervalHours(Number(e.target.value))}
+                className="appearance-none bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-medium text-xs rounded-lg pl-7 pr-7 py-1 focus:outline-none cursor-pointer shadow-xs transition"
+              >
+                {TIME_INTERVALS.map((opt) => (
+                  <option key={opt.hours} value={opt.hours}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <Clock className="w-3.5 h-3.5 text-stone-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3 h-3 text-stone-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+            <span className="text-xs text-stone-500 font-medium hidden sm:inline">
+              Select Feedback:
+            </span>
+            {renderFeedbackSelector('hidden lg:block')}
           </div>
 
-          {/* DESKTOP FEEDBACK SELECTOR */}
-          {renderFeedbackSelector('hidden lg:block')}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-medium text-stone-600 hidden md:inline">
-            {filteredFeedbacks.length} report{filteredFeedbacks.length !== 1 ? 's' : ''} in {selectedIntervalLabel}
+          <span className="text-xs text-stone-600 font-medium">
+            <strong className="text-stone-900 font-bold">{filteredFeedbacks.length}</strong> report{filteredFeedbacks.length !== 1 ? 's' : ''} found
           </span>
         </div>
-      </div>
+      </header>
 
       {/* 50/50 SPLIT CONTENT CONTAINER */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
 
-        {/* MAP CONTAINER: ALWAYS RENDERED ON LEFT (DESKTOP) / TOP (MOBILE) */}
+        {/* MAP CONTAINER */}
         <div className="flex flex-col h-auto lg:h-full order-1">
           <div className="bg-white rounded-xl shadow-xs border border-stone-200/80 flex flex-col flex-1 overflow-hidden relative min-h-[350px] sm:min-h-[400px] lg:min-h-0">
             <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3 bg-white/90 backdrop-blur-xs border-b border-stone-200/60">
@@ -479,7 +540,7 @@ const ReportDashboard = () => {
                 Live Location Overview
               </h3>
               <a
-                href={`${import.meta.env.VITE_PURETRACE_MAP}`}
+                href={dynamicMapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[11px] text-emerald-700 hover:underline font-medium inline-flex items-center gap-1"
@@ -490,7 +551,7 @@ const ReportDashboard = () => {
 
             <div className="w-full h-full flex-1 relative pt-10">
               <iframe
-                src={`${import.meta.env.VITE_PURETRACE_MAP}`}
+                src={dynamicMapUrl}
                 title="Scan Location Map"
                 className="w-full h-full border-0"
                 loading="lazy"
@@ -498,14 +559,12 @@ const ReportDashboard = () => {
             </div>
           </div>
 
-          {/* MOBILE/TABLET FEEDBACK SELECTOR (DISPLAYED BELOW MAP) */}
           {renderFeedbackSelector('block lg:hidden mt-3')}
         </div>
 
-        {/* REPORT & AI DIAGNOSTICS: SECOND ON MOBILE, RIGHT (ORDER-2) ON DESKTOP */}
+        {/* REPORT & AI DIAGNOSTICS */}
         <div className="flex flex-col gap-3 h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-1 order-2">
           {!filteredFeedbacks.length ? (
-            /* EMPTY STATE CARD WHEN NO REPORTS ARE FOUND IN SELECTED INTERVAL */
             <div className="bg-white rounded-xl shadow-xs border border-stone-200/80 p-8 h-full flex flex-col items-center justify-center text-center">
               <div className="p-3 bg-stone-100 rounded-full mb-3">
                 <Inbox className="w-6 h-6 text-stone-400" />
@@ -538,7 +597,6 @@ const ReportDashboard = () => {
                   </p>
                 </div>
 
-                {/* 3-COLUMN METRICS GRID */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                   <div className="bg-stone-100/70 rounded-lg p-3">
                     <span className="text-[11px] font-bold text-stone-800 block mb-1">AI Insight</span>
@@ -547,7 +605,6 @@ const ReportDashboard = () => {
                     </p>
                   </div>
 
-                  {/* CUSTOMER REPORT CARD WITH INTEGRATED TRANSLATION */}
                   <div className="bg-stone-100/70 rounded-lg p-3 flex flex-col justify-between">
                     <div>
                       <span className="text-[11px] font-bold text-stone-800 block mb-1">Customer Report</span>
@@ -556,7 +613,6 @@ const ReportDashboard = () => {
                       </p>
                     </div>
 
-                    {/* CUSTOMER REPORT TRANSLATE CONTROLS */}
                     <div className="mt-2.5 pt-2 border-t border-stone-200/60">
                       <div className="flex gap-1.5 items-center">
                         <div className="relative flex-1">
@@ -641,7 +697,6 @@ const ReportDashboard = () => {
                         </div>
                       </div>
 
-                      {/* TRANSLATE CONTROLS */}
                       <div className="border-t border-stone-100 pt-2.5">
                         <label className="block text-[11px] font-semibold text-stone-600 mb-1.5">
                           Translate to
@@ -747,7 +802,6 @@ const ReportDashboard = () => {
                         })}
                       </div>
 
-                      {/* AUDIO PLAYER SECTION BELOW ANALYSIS */}
                       <div className="mt-3 pt-2.5 border-t border-stone-100 shrink-0">
                         <div className="flex items-center gap-1.5 mb-1.5 text-stone-800 font-semibold text-[11px]">
                           <Volume2 className="w-3.5 h-3.5 text-stone-600" />
@@ -782,6 +836,13 @@ const ReportDashboard = () => {
         </div>
 
       </div>
+
+      {/* COMPANY COPYRIGHT WATERMARK */}
+      <footer className="mt-2 text-right shrink-0">
+        <span className="text-[10px] text-stone-400 font-medium tracking-wide">
+          PureTrace @ DoWell Research
+        </span>
+      </footer>
     </div>
   );
 };
