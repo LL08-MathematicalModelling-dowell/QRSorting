@@ -238,7 +238,6 @@ const ReportDashboard = () => {
 
   useEffect(() => {
     let isMounted = true;
-
     const fetchAudioSignedUrl = async () => {
       if (!gridfsFileId) {
         setAudioUrl(null);
@@ -457,7 +456,7 @@ const ReportDashboard = () => {
               />
             ) : (
               <img
-                src="/puretrace-logo.png"
+                src="/images/puretrace-logo.png"
                 alt="PureTrace"
                 className="h-7 w-auto object-contain hidden sm:block"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
