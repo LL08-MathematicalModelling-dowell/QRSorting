@@ -16,7 +16,6 @@ import DeliveryScanner from "./pages/DeliveryScanner";
 import NotFound from "./pages/NotFound";
 import HotelFeedbackReport from "./pages/HotelFeedbackReport";
 import RoomOverviewDashboard from "./pages/RoomOverviewDashboard";
-import RoomOverviewDashboard2 from "./pages/RoomOverviewDashboard2";
 import ProductFeedbackReport from "./pages/ProductFeedbackReport";
 
 const queryClient = new QueryClient();

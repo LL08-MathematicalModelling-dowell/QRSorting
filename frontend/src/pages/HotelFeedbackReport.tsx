@@ -72,7 +72,7 @@ const FeedbackAudioPlayer = ({ gridfsFileId }) => {
 
   if (audioLoading) {
     return (
-      <div className="flex items-center gap-2 p-3 bg-[#FAF7F2] rounded-2xl border border-[#F0E6D8] text-xs text-[#8C7A6B] mt-4">
+      <div className="flex items-center gap-2 p-2.5 bg-[#FAF7F2] rounded-xl border border-[#F0E6D8] text-xs text-[#8C7A6B] mt-3">
         <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C5A059]" />
         Fetching audio recording...
       </div>
@@ -80,21 +80,21 @@ const FeedbackAudioPlayer = ({ gridfsFileId }) => {
   }
 
   if (audioError) {
-    return <p className="text-xs text-[#A35C48] font-medium mt-4">⚠️ {audioError}</p>;
+    return <p className="text-xs text-[#A35C48] font-medium mt-3">⚠️ {audioError}</p>;
   }
 
   if (!audioUrl) return null;
 
   return (
-    <div className="mt-4 pt-4 border-t border-[#F0E6D8]">
-      <div className="flex items-center gap-1.5 mb-2 text-[#4A453F] font-bold text-xs">
-        <Volume2 className="w-4 h-4 text-[#C5A059]" />
+    <div className="mt-3 pt-3 border-t border-[#F0E6D8]">
+      <div className="flex items-center gap-1.5 mb-1.5 text-[#4A453F] font-bold text-xs">
+        <Volume2 className="w-3.5 h-3.5 text-[#C5A059]" />
         Audio Recording Playback
       </div>
       <audio
         controls
         src={audioUrl}
-        className="w-full h-10 rounded-xl outline-none"
+        className="w-full h-8 rounded-xl outline-none"
       >
         Your browser does not support the audio element.
       </audio>
@@ -116,12 +116,11 @@ const ReportDashboard = () => {
   const [translations, setTranslations] = useState({});
   const [translating, setTranslating] = useState({});
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [reopeningStates, setReopeningStates] = useState({}); // Tracks which card is currently prompting for severity
-  const [selectedSeverities, setSelectedSeverities] = useState({}); // Stores chosen severity per feedback ID
+  const [reopeningStates, setReopeningStates] = useState({});
+  const [selectedSeverities, setSelectedSeverities] = useState({});
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Helper function to extract a reliable timestamp from feedback or metadata
   const getFeedbackTimestamp = (item) => {
     const raw =
       item.submitted_at ||
@@ -164,7 +163,6 @@ const ReportDashboard = () => {
         const response = await feedbackAPI.getFeedbacksByDate(qrId, today, clientName);
         const feedbackList = response.feedbacks || [];
 
-        // Sort newest -> oldest, preserving local resolution states
         setFeedbacks((prevFeedbacks) => {
           const resolvedMap = new Map(prevFeedbacks.map((f) => [f._id, f.isResolved]));
           const merged = feedbackList.map((feedback) => {
@@ -223,7 +221,6 @@ const ReportDashboard = () => {
 
     setReopeningStates((prev) => ({ ...prev, [feedback._id]: false }));
 
-    // Optimistic local UI update
     setFeedbacks((prevFeedbacks) =>
       prevFeedbacks.map((item) => {
         if (item._id === feedback._id) {
@@ -264,13 +261,13 @@ const ReportDashboard = () => {
     try {
       setTranslating((prev) => ({ ...prev, [feedback._id]: true }));
       const response = await feedbackAPI.translateText(feedback.transcript, 'English');
-      const translation = response?.data?.translation;
+      const translation = response?.data?.translation 
 
-      if (translationText) {
+      if (translation) {
         setTranslations((prev) => ({
           ...prev,
           [feedback._id]: {
-            text: translationText,
+            text: translation,
             language: response?.data?.detected_language,
             languageCode: response?.data?.language_code,
           },
@@ -292,7 +289,6 @@ const ReportDashboard = () => {
 
   const displayName = formatClientName(clientName);
 
-  // Filter feedbacks based on selected time interval
   const getFilteredByTimeRange = (list) => {
     const now = new Date().getTime();
     let hoursLimit = 24;
@@ -315,7 +311,7 @@ const ReportDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-8 font-sans flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-4 sm:p-8 font-sans flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#C5A059] border-t-transparent mb-4"></div>
           <p className="text-[#8C7A6B] font-medium tracking-wide">
@@ -328,8 +324,8 @@ const ReportDashboard = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-8 font-sans flex items-center justify-center">
-        <div className="bg-white/80 backdrop-blur-md border border-[#E6D5B8] rounded-2xl p-8 text-center max-w-md shadow-xl">
+      <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-4 sm:p-8 font-sans flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-md border border-[#E6D5B8] rounded-2xl p-6 text-center max-w-md shadow-xl">
           <p className="text-[#A35C48] font-semibold tracking-wide">{error}</p>
         </div>
       </div>
@@ -347,7 +343,7 @@ const ReportDashboard = () => {
           boxBg: 'bg-white text-gray-900 border border-red-200',
           accentText: 'text-red-700',
           metaBg: 'bg-white/10 text-white border-white/20',
-          icon: <AlertCircle className="w-8 h-8 text-white" />,
+          icon: <AlertCircle className="w-6 h-6 text-white" />,
         };
       case 'orange':
       case 'medium':
@@ -357,7 +353,7 @@ const ReportDashboard = () => {
           boxBg: 'bg-white text-gray-900 border border-orange-200',
           accentText: 'text-orange-800',
           metaBg: 'bg-white/10 text-white border-white/20',
-          icon: <AlertCircle className="w-8 h-8 text-white" />,
+          icon: <AlertCircle className="w-6 h-6 text-white" />,
         };
       default:
         return {
@@ -366,7 +362,7 @@ const ReportDashboard = () => {
           boxBg: 'bg-white text-gray-900 border border-emerald-200',
           accentText: 'text-emerald-800',
           metaBg: 'bg-white/10 text-white border-white/20',
-          icon: <CheckCircle className="w-8 h-8 text-white" />,
+          icon: <CheckCircle className="w-6 h-6 text-white" />,
         };
     }
   };
@@ -400,50 +396,56 @@ const ReportDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-8 font-sans">
-      <div className="max-w-5xl mx-auto">
-        {/* NAVIGATION & HEADER */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-[#E6D5B8] rounded-xl text-xs font-bold text-[#7D756D] hover:bg-white hover:text-[#2C2A29] shadow-sm transition duration-200 cursor-pointer mb-6"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#C5A059]" />
-            Back to Overview
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] font-sans">
+      
+      {/* STICKY SINGLE-ROW HEADER COMMAND BAR */}
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#FDFBF7]/95 border-b border-[#E6D5B8]/80 shadow-xs px-4 sm:px-8 py-3.5">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+          
+          {/* LEFT: Back button, Client Name & Title on One Row */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E6D5B8] rounded-xl text-xs font-bold text-[#7D756D] hover:bg-[#FAF7F2] hover:text-[#2C2A29] shadow-xs transition cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-[#C5A059]" />
+              Back
+            </button>
 
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#E6D5B8]/60 pb-6">
-            <div>
-              <div className="flex items-center gap-2 text-[#C5A059] font-bold text-xs uppercase tracking-widest mb-1.5">
-                <Crown className="w-4 h-4 text-[#C5A059]" />
+            <div className="h-4 w-px bg-[#E6D5B8] hidden sm:block"></div>
+
+            <div className="flex items-center gap-2">
+              <Crown className="w-3.5 h-3.5 text-[#C5A059]" />
+              <span className="text-xs font-bold text-[#C5A059] uppercase tracking-wider">
                 {displayName}
-              </div>
-              
-              {/* TITLE WITH LIVE SPINNER BESIDE IT */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-3xl lg:text-4xl font-extrabold text-[#2C2A29] tracking-tight">
-                  VOICE FEEDBACK LIVE
-                </h1>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50/90 border border-emerald-200/80 rounded-full px-3 py-1 shadow-xs">
-                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  Live (3s)
-                </span>
-              </div>
-
-              <p className="text-sm font-medium text-[#7D756D] mt-1.5">
-                {timeFilteredFeedbacks.length} feedback{timeFilteredFeedbacks.length !== 1 ? 's' : ''} found for selected interval
-              </p>
+              </span>
             </div>
 
-            {/* FILTERS TOOLBAR */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* TIME INTERVAL DROPDOWN */}
-              <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-[#E6D5B8] rounded-2xl px-4 py-2 shadow-sm">
-                <Calendar className="w-4 h-4 text-[#C5A059] mr-2" />
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-[#2C2A29] tracking-tight">
+                VOICE FEEDBACK LIVE
+              </h1>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">
+                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Live (3s)
+              </span>
+            </div>
+          </div>
+
+          {/* RIGHT: Filters & Stats Counter */}
+          <div className="flex items-center gap-2.5 flex-wrap justify-between md:justify-end">
+            <span className="text-xs font-medium text-[#7D756D]">
+              {timeFilteredFeedbacks.length} feedback{timeFilteredFeedbacks.length !== 1 ? 's' : ''}
+            </span>
+
+            <div className="flex items-center gap-2">
+              {/* TIME RANGE SELECTOR */}
+              <div className="flex items-center bg-white border border-[#E6D5B8] rounded-xl px-3 py-1.5 shadow-xs">
+                <Calendar className="w-3.5 h-3.5 text-[#C5A059] mr-1.5" />
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="bg-transparent text-xs font-bold uppercase tracking-wider text-[#4A453F] focus:outline-none cursor-pointer pr-2"
+                  className="bg-transparent text-[11px] font-bold uppercase tracking-wider text-[#4A453F] focus:outline-none cursor-pointer pr-1"
                 >
                   <option value="24h">24 Hours</option>
                   <option value="7d">7 Days</option>
@@ -452,31 +454,35 @@ const ReportDashboard = () => {
                 </select>
               </div>
 
-              {/* LATEST / ALL DROPDOWN */}
-              <div className="relative flex items-center bg-white/80 backdrop-blur-sm border border-[#E6D5B8] rounded-2xl px-4 py-2 shadow-sm">
-                <Filter className="w-4 h-4 text-[#C5A059] mr-2" />
+              {/* FILTER SELECTOR */}
+              <div className="flex items-center bg-white border border-[#E6D5B8] rounded-xl px-3 py-1.5 shadow-xs">
+                <Filter className="w-3.5 h-3.5 text-[#C5A059] mr-1.5" />
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  className="bg-transparent text-xs font-bold uppercase tracking-wider text-[#4A453F] focus:outline-none cursor-pointer pr-2"
+                  className="bg-transparent text-[11px] font-bold uppercase tracking-wider text-[#4A453F] focus:outline-none cursor-pointer pr-1"
                 >
                   <option value="latest">Latest</option>
                   <option value="all">All</option>
                 </select>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* FEEDBACK LIST OR EMPTY STATE */}
+          </div>
+
+        </div>
+      </header>
+
+      {/* MAIN CONTAINER */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-8 py-6">
         {displayedFeedbacks.length === 0 ? (
-          <div className="bg-white/80 backdrop-blur-md border border-[#E6D5B8] rounded-3xl p-12 text-center shadow-sm">
-            <p className="text-[#8C7A6B] font-medium">
+          <div className="bg-white/80 backdrop-blur-md border border-[#E6D5B8] rounded-2xl p-10 text-center shadow-xs">
+            <p className="text-[#8C7A6B] font-medium text-sm">
               No feedback found for the selected time interval.
             </p>
           </div>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-8">
             {displayedFeedbacks.map((feedback, index) => {
               const metrics = feedback.dashboard_metrics || {};
               const audio = feedback.audio_analysis || {};
@@ -496,39 +502,39 @@ const ReportDashboard = () => {
 
               return (
                 <React.Fragment key={feedback._id}>
-                  <div className="space-y-6">
+                  <div className="space-y-4">
+                    
                     {/* PROMINENT URGENCY CARD */}
                     <div
-                      className={`rounded-3xl ${theme.cardBg} p-8 shadow-xl border border-black/10 transition-all duration-300`}
+                      className={`rounded-2xl ${theme.cardBg} p-5 sm:p-6 shadow-lg border border-black/10 transition-all duration-300`}
                     >
-                      <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4 mb-6">
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-3 mb-4">
                         {/* LEFT HEADER */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2.5">
                           {theme.icon}
-                          <h2 className={`text-2xl font-black uppercase tracking-wider ${theme.headerText}`}>
+                          <h2 className={`text-xl font-black uppercase tracking-wider ${theme.headerText}`}>
                             {severity} URGENCY
                           </h2>
                         </div>
 
-                        {/* RIGHT METADATA, SEVERITY SELECTOR & RESOLVE/REOPEN BUTTON */}
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <div className={`flex items-center gap-4 text-xs font-bold ${theme.metaBg} backdrop-blur-md px-4 py-2 rounded-2xl border shadow-sm`}>
-                            <div className="flex items-center gap-1.5">
-                              <MapPin className="w-4 h-4" />
+                        {/* RIGHT METADATA & RESOLVE/REOPEN BUTTON */}
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <div className={`flex items-center gap-3 text-xs font-bold ${theme.metaBg} backdrop-blur-md px-3.5 py-1.5 rounded-xl border shadow-xs`}>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5" />
                               Room {roomNumber}
                             </div>
                             <span className="opacity-40">|</span>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" />
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
                               {formatDateTime(submittedAt)}
                             </div>
                           </div>
 
-                          {/* INLINE SEVERITY DROPDOWN, CONFIRM BUTTON & CLOSE ICON */}
                           {feedback.isResolved && isReopeningActive ? (
-                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-1.5 rounded-2xl shadow-sm">
-                              <div className="bg-white/25 rounded-xl px-3 py-1.5 flex items-center gap-2">
-                                <span className="text-[10px] font-extrabold text-white uppercase tracking-wider">Severity:</span>
+                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 p-1 rounded-xl shadow-xs">
+                              <div className="bg-white/25 rounded-lg px-2 py-1 flex items-center gap-1.5">
+                                <span className="text-[10px] font-extrabold text-white uppercase">Severity:</span>
                                 <select
                                   value={selectedSeverities[feedback._id] || 'medium'}
                                   onChange={(e) =>
@@ -537,7 +543,7 @@ const ReportDashboard = () => {
                                       [feedback._id]: e.target.value,
                                     }))
                                   }
-                                  className="bg-white text-gray-900 text-xs font-bold rounded-lg px-2 py-1 outline-none cursor-pointer"
+                                  className="bg-white text-gray-900 text-xs font-bold rounded px-1.5 py-0.5 outline-none cursor-pointer"
                                 >
                                   <option value="low">Low</option>
                                   <option value="medium">Medium</option>
@@ -547,41 +553,40 @@ const ReportDashboard = () => {
 
                               <button
                                 onClick={() => handleResolveToggle(feedback, true)}
-                                className="px-4 py-2 rounded-xl text-xs font-bold transition duration-200 flex items-center gap-1.5 cursor-pointer shadow-md bg-amber-600 hover:bg-amber-700 text-white border border-amber-500"
+                                className="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer bg-amber-600 hover:bg-amber-700 text-white"
                               >
-                                <Check className="w-4 h-4" />
-                                Confirm Reopen
+                                <Check className="w-3.5 h-3.5" />
+                                Confirm
                               </button>
 
-                              {/* CLOSE/UNDO ICON BUTTON TO THE RIGHT OF CONFIRM */}
                               <button
                                 onClick={() =>
                                   setReopeningStates((prev) => ({ ...prev, [feedback._id]: false }))
                                 }
-                                className="p-2 rounded-xl bg-white/20 hover:bg-white/40 text-white transition duration-200 cursor-pointer flex items-center justify-center"
-                                title="Cancel reopening"
+                                className="p-1.5 rounded-lg bg-white/20 hover:bg-white/40 text-white transition cursor-pointer flex items-center justify-center"
+                                title="Cancel"
                               >
-                                <X className="w-4 h-4" />
+                                <X className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           ) : (
                             <button
                               onClick={() => handleResolveToggle(feedback, false)}
-                              className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition duration-200 flex items-center gap-1.5 cursor-pointer shadow-sm backdrop-blur-md ${
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs backdrop-blur-md ${
                                 feedback.isResolved
                                   ? 'bg-amber-600 text-white hover:bg-amber-700 border border-amber-500'
-                                  : 'bg-white/20 text-white hover:bg-white/30 border border-white/30'
+                                  : 'bg-white/20 text-white hover:bg-white/35 border border-white/30'
                               }`}
                             >
                               {feedback.isResolved ? (
                                 <>
-                                  <RotateCcw className="w-4 h-4" />
+                                  <RotateCcw className="w-3.5 h-3.5" />
                                   Reopen case
                                 </>
                               ) : (
                                 <>
-                                  <CheckCircle className="w-4 h-4" />
-                                  Mark as resolved
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  Mark resolved
                                 </>
                               )}
                             </button>
@@ -589,60 +594,68 @@ const ReportDashboard = () => {
                         </div>
                       </div>
 
-                      {/* AI ASSESSMENT */}
-                      <div className={`rounded-2xl p-5 ${theme.boxBg} shadow-sm mb-4`}>
-                        <p className={`text-xs font-bold uppercase tracking-wider ${theme.accentText} mb-1 flex items-center gap-1.5`}>
-                          <Sparkles className="w-3.5 h-3.5" /> AI Assessment:
-                        </p>
-                        <p className="text-base font-medium text-gray-800 leading-relaxed">
-                          {aiAssessment}
-                        </p>
-                      </div>
-
-                      {/* GUEST FEEDBACK */}
-                      {feedback.description && (
-                        <div className={`rounded-2xl p-5 ${theme.boxBg} shadow-sm mb-4`}>
-                          <p className={`text-xs font-bold uppercase tracking-wider ${theme.accentText} mb-1`}>
-                            Guest Feedback:
+                      {/* COMPACT CARD CONTENT SECTIONS */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className={`rounded-xl p-3.5 ${theme.boxBg} shadow-xs`}>
+                          <p className={`text-[11px] font-bold uppercase tracking-wider ${theme.accentText} mb-1 flex items-center gap-1`}>
+                            <Sparkles className="w-3 h-3" /> AI Assessment:
                           </p>
-                          <p className="text-base font-medium text-gray-800 leading-relaxed">
-                            "{feedback.description}"
+                          <p className="text-sm font-medium text-gray-800 leading-relaxed">
+                            {aiAssessment}
                           </p>
                         </div>
-                      )}
 
-                      {/* ACTION RECOMMENDATION */}
-                      <div className={`rounded-2xl p-5 ${theme.boxBg} shadow-sm`}>
-                        <p className={`text-xs font-bold uppercase tracking-wider ${theme.accentText} mb-1`}>
-                          Action Recommendation:
-                        </p>
-                        <p className="text-base font-medium text-gray-800 leading-relaxed">
-                          {recommendedAction}
-                        </p>
+                        {feedback.description ? (
+                          <div className={`rounded-xl p-3.5 ${theme.boxBg} shadow-xs`}>
+                            <p className={`text-[11px] font-bold uppercase tracking-wider ${theme.accentText} mb-1`}>
+                              Guest Feedback:
+                            </p>
+                            <p className="text-sm font-medium text-gray-800 leading-relaxed">
+                              "{feedback.description}"
+                            </p>
+                          </div>
+                        ) : (
+                          <div className={`rounded-xl p-3.5 ${theme.boxBg} shadow-xs flex flex-col justify-center`}>
+                            <p className={`text-[11px] font-bold uppercase tracking-wider ${theme.accentText} mb-1`}>
+                              Guest Feedback:
+                            </p>
+                            <p className="text-sm font-medium text-gray-500 italic">No text description provided.</p>
+                          </div>
+                        )}
+
+                        <div className={`rounded-xl p-3.5 ${theme.boxBg} shadow-xs`}>
+                          <p className={`text-[11px] font-bold uppercase tracking-wider ${theme.accentText} mb-1`}>
+                            Action Recommendation:
+                          </p>
+                          <p className="text-sm font-medium text-gray-800 leading-relaxed">
+                            {recommendedAction}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    {/* DIAGNOSTIC BREAKDOWN TITLE */}
-                    <div className="flex items-center gap-2 pt-2">
-                      <h3 className="text-xl font-bold text-[#2C2A29] tracking-tight">
+                    {/* DIAGNOSTIC BREAKDOWN SECTION TITLE */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <h3 className="text-base font-bold text-[#2C2A29] tracking-tight">
                         AI Diagnostic Breakdown
                       </h3>
                       <div className="flex-1 h-px bg-[#E6D5B8]/60"></div>
                     </div>
 
                     {/* DIAGNOSTIC CARDS GRID */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
                       {/* SEMANTIC CARD */}
-                      <div className="bg-white/90 backdrop-blur-sm rounded-3xl border border-[#E6D5B8] p-6 shadow-[0_4px_20px_-4px_rgba(197,160,89,0.08)]">
-                        <div className="flex justify-between items-center mb-5">
-                          <h4 className="font-bold text-[#2C2A29] flex items-center gap-2 text-sm tracking-wide">
-                            <MessageSquare className="w-4 h-4 text-[#C5A059]" />
+                      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-[#E6D5B8] p-4 shadow-xs">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-bold text-[#2C2A29] flex items-center gap-1.5 text-xs tracking-wide">
+                            <MessageSquare className="w-3.5 h-3.5 text-[#C5A059]" />
                             What was said (Semantic)
                           </h4>
 
                           {transcript.label ? (
                             <span
-                              className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${
+                              className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest ${
                                 transcript.label.toLowerCase() === 'negative'
                                   ? 'bg-red-100 text-red-700 border border-red-200'
                                   : transcript.label.toLowerCase() === 'positive'
@@ -656,45 +669,44 @@ const ReportDashboard = () => {
                                 : ''}
                             </span>
                           ) : (
-                            <span className="px-3 py-1 rounded-full bg-[#FAF7F2] text-[#8C7A6B] text-[10px] font-bold uppercase tracking-wider border border-[#E6D5B8]">
+                            <span className="px-2 py-0.5 rounded-full bg-[#FAF7F2] text-[#8C7A6B] text-[9px] font-bold uppercase border border-[#E6D5B8]">
                               NO TEXT
                             </span>
                           )}
                         </div>
 
-                        <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#F0E6D8] italic text-sm text-[#4A453F] leading-relaxed mb-4">
+                        <div className="bg-[#FAF7F2] p-3 rounded-xl border border-[#F0E6D8] italic text-xs text-[#4A453F] leading-relaxed mb-3">
                           {feedback.transcript
                             ? `"${feedback.transcript}"`
                             : 'No transcript available for this feedback.'}
                         </div>
 
-                        {/* BLUE TRANSLATE BUTTON */}
                         {feedback.transcript && (
                           <div>
                             <button
                               onClick={() => handleTranslate(feedback)}
                               disabled={translating[feedback._id]}
-                              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-sm disabled:opacity-50 transition duration-200 cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs disabled:opacity-50 transition cursor-pointer"
                             >
-                              <Languages className="w-3.5 h-3.5 text-white" />
+                              <Languages className="w-3 h-3 text-white" />
                               {translating[feedback._id] ? 'Translating...' : 'Translate to English'}
                             </button>
                           </div>
                         )}
 
                         {translations[feedback._id] && (
-                          <div className="mt-4 pt-4 border-t border-[#F0E6D8]">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                          <div className="mt-3 pt-3 border-t border-[#F0E6D8]">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
                                 English Translation
                               </span>
                               {translations[feedback._id].language && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
                                   {translations[feedback._id].language}
                                 </span>
                               )}
                             </div>
-                            <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-sm text-[#4A453F] leading-relaxed">
+                            <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 text-xs text-[#4A453F] leading-relaxed">
                               {translations[feedback._id].text}
                             </div>
                           </div>
@@ -702,21 +714,20 @@ const ReportDashboard = () => {
                       </div>
 
                       {/* ACOUSTIC CARD */}
-                      <div className="bg-white/90 backdrop-blur-sm rounded-3xl border border-[#E6D5B8] p-6 shadow-[0_4px_20px_-4px_rgba(197,160,89,0.08)] flex flex-col justify-between">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-[#E6D5B8] p-4 shadow-xs flex flex-col justify-between">
                         <div>
-                          <div className="flex justify-between items-center mb-5">
-                            <h4 className="font-bold text-[#2C2A29] flex items-center gap-2 text-sm tracking-wide">
-                              <Volume2 className="w-4 h-4 text-[#C5A059]" />
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-bold text-[#2C2A29] flex items-center gap-1.5 text-xs tracking-wide">
+                              <Volume2 className="w-3.5 h-3.5 text-[#C5A059]" />
                               How it was said (Acoustic)
                             </h4>
-                            <span className="px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#E6D5B8] text-[#8C7A6B] text-[10px] font-extrabold uppercase tracking-wider">
+                            <span className="px-2.5 py-0.5 rounded-full bg-[#FAF7F2] border border-[#E6D5B8] text-[#8C7A6B] text-[9px] font-extrabold uppercase tracking-wider">
                               {formatEmotion(audio.dominant_emotion)} Tone
                             </span>
                           </div>
 
-                          {/* DOMINANT EMOTION CONFIDENCE BAR (PURPLE) */}
-                          <div className="mb-6 bg-[#FAF7F2] p-4 rounded-2xl border border-[#F0E6D8]">
-                            <div className="flex justify-between text-xs font-bold text-[#7D756D] mb-2">
+                          <div className="mb-4 bg-[#FAF7F2] p-3 rounded-xl border border-[#F0E6D8]">
+                            <div className="flex justify-between text-[11px] font-bold text-[#7D756D] mb-1.5">
                               <span>Dominant emotion confidence</span>
                               <span className="text-[#2C2A29]">
                                 {typeof audio.audio_score === 'number'
@@ -724,16 +735,15 @@ const ReportDashboard = () => {
                                   : 'N/A'}
                               </span>
                             </div>
-                            <div className="w-full bg-[#E6D5B8]/40 rounded-full h-2 overflow-hidden">
+                            <div className="w-full bg-[#E6D5B8]/40 rounded-full h-1.5 overflow-hidden">
                               <div
-                                className="bg-purple-600 h-2 rounded-full transition-all duration-500"
+                                className="bg-purple-600 h-1.5 rounded-full transition-all duration-500"
                                 style={{ width: `${(audio.audio_score || 0) * 100}%` }}
                               />
                             </div>
                           </div>
 
-                          {/* OTHER EMOTION DISTRIBUTION BARS */}
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {Object.entries(rawDistribution)
                               .sort(([, a], [, b]) => b - a)
                               .map(([emotion, score]) => {
@@ -742,19 +752,19 @@ const ReportDashboard = () => {
                                   emotion.toLowerCase() === audio.dominant_emotion.toLowerCase();
 
                                 return (
-                                  <div key={emotion} className="flex items-center text-xs">
-                                    <span className="w-20 capitalize font-medium text-[#7D756D]">
+                                  <div key={emotion} className="flex items-center text-[11px]">
+                                    <span className="w-16 capitalize font-medium text-[#7D756D]">
                                       {emotion}
                                     </span>
-                                    <div className="flex-1 bg-[#FAF7F2] rounded-full h-2 mx-3 overflow-hidden border border-[#F0E6D8]">
+                                    <div className="flex-1 bg-[#FAF7F2] rounded-full h-1.5 mx-2 overflow-hidden border border-[#F0E6D8]">
                                       <div
-                                        className={`h-2 rounded-full transition-all duration-300 ${
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${
                                           isDominant ? 'bg-purple-600' : 'bg-blue-500'
                                         }`}
                                         style={{ width: `${score * 100}%` }}
                                       />
                                     </div>
-                                    <span className="w-12 text-right font-semibold text-[#4A453F]">
+                                    <span className="w-10 text-right font-semibold text-[#4A453F]">
                                       {(score * 100).toFixed(1)}%
                                     </span>
                                   </div>
@@ -763,21 +773,21 @@ const ReportDashboard = () => {
                           </div>
                         </div>
 
-                        {/* AUDIO PLAYER */}
                         <FeedbackAudioPlayer gridfsFileId={gridfsFileId} />
                       </div>
+
                     </div>
                   </div>
 
-                  {/* FEEDBACK ENTRY SEPARATOR */}
-                  {index < displayedFeedbacks.length + 1 && (
-                    <div className="relative py-6 flex items-center justify-center">
+                  {/* SEPARATOR BETWEEN ENTRIES */}
+                  {index < displayedFeedbacks.length - 1 && (
+                    <div className="relative py-4 flex items-center justify-center">
                       <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-[#E6D5B8]"></div>
                       </div>
-                      <div className="relative bg-[#FAF7F2] border border-[#E6D5B8] px-4 py-1.5 rounded-full text-xs font-bold text-[#C5A059] shadow-sm flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                        <span>End of Feedback Entry #{index + 1}</span>
+                      <div className="relative bg-[#FAF7F2] border border-[#E6D5B8] px-3 py-1 rounded-full text-[10px] font-bold text-[#C5A059] shadow-xs flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-[#C5A059]" />
+                        <span>End of Entry #{index + 1}</span>
                       </div>
                     </div>
                   )}
@@ -786,14 +796,15 @@ const ReportDashboard = () => {
             })}
           </div>
         )}
-      </div>
+      </main>
 
       {/* FOOTER WATERMARK */}
-      <footer className="mt-8 text-right">
+      <footer className="mt-6 py-4 px-8 text-right border-t border-[#E6D5B8]/40">
         <span className="text-[10px] text-[#A89F91] font-medium tracking-wide">
           Voice Feedback Live @ DoWell Research
         </span>
       </footer>
+
     </div>
   );
 };
