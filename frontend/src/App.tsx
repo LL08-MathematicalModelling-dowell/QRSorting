@@ -48,7 +48,6 @@ const App = () => (
           {/* Hotel Feedback Report route */}
           <Route path="/hotel-feedback/" element={<HotelFeedbackReport />} />
           <Route path="/room-overview" element={<RoomOverviewDashboard />} />
-          <Route path="/room-overview-dummy" element={<RoomOverviewDashboard2 />} />
 
           {/* Product Feedback Report route */}
           <Route path="/product-feedback/" element={<ProductFeedbackReport />} />
