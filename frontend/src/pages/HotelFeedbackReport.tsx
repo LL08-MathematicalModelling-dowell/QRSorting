@@ -203,7 +203,7 @@ const ReportDashboard = () => {
     try {
       setTranslating((prev) => ({ ...prev, [feedback._id]: true }));
       const response = await feedbackAPI.translateText(feedback.transcript, 'English');
-      const translation = response?.data?.english_translation;
+      const translation = response?.data?.translation;
 
       if (translation) {
         setTranslations((prev) => ({
