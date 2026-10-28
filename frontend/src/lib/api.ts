@@ -418,7 +418,7 @@ export const scanAPI = {
 
 export const feedbackAPI = {
   getFeedbacksByDate: async (qrId: string, date: string, clientName: string): Promise<FeedbackResult> => {
-    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks-by-date/?qrId=${qrId}&date=${date}`;
+    const endpoint = `${BACKEND_URL}/feedback/get-feedbacks-by-date/?qrId=${qrId}&date=${date}&clientName=${clientName}`;
 
     try {
       const response = await fetch(endpoint, {
@@ -471,6 +471,64 @@ export const feedbackAPI = {
       return result;
     } catch (error) {
       console.error("API Call Error in feedbackAPI.getFeedbacks:", error);
+      throw error;
+    }
+  },
+
+  fetchFeedbackMetadata: async (qrId: string, feedback_id: string): Promise<FeedbackResult> => {
+    const endpoint = `${import.meta.env.VITE_METADATA_API}?qrId=${qrId}&feedback_id=${feedback_id}`;  
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch feedback metadata. Status: ${response.status}`);
+      }
+
+      const res = await response.json();
+
+      const result: FeedbackResult = {
+        success: res.success,
+        message: res.message,
+        feedbacks: res.data
+      };
+      return result;
+    } catch (error) {
+      console.error("API Call Error in feedbackAPI.fetchFeedbackMetadata:", error);
+      throw error;
+    }
+  },
+
+  updateFeedbackStatus: async (payload: any): Promise<{ success: boolean; message?: string }> => {
+    const endpoint = `${BACKEND_URL}/feedback/update-feedback-status`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update feedback metadata. Status: ${response.status}`);
+      }
+
+      const res = await response.json();
+
+      const result = {
+        success: res.success,
+        message: res.message
+      };
+      return result;
+    } catch (error) {
+      console.error("API Call Error in feedbackAPI.updateFeedbackMetadata:", error);
       throw error;
     }
   },
