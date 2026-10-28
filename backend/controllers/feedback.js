@@ -9,9 +9,13 @@ export async function getFeedbacksByDate(req, res) {
         console.log("This is the query:", req.query)
         const qrId = req.query.qrId.toLowerCase();
         const date = req.query.date;
-        // const clientName = req.query.clientName.toLowerCase();
-        const collId = qrId.slice(-4)
-        const filters = {"type": "hotel_feedback", "submitted_at": {"$gte": date + "T00:00:00.000Z", "$lte": date + "T23:59:59.999Z"}};
+        const clientName = req.query.clientName.toLowerCase();
+        const collId = qrId.slice(0,4)
+        const filters = {"type": "hotel_feedback",
+            "qr_id": qrId,
+            // "client_name": clientName,
+            // "submitted_at": {"$gte": date + "T00:00:00.000Z", "$lte": date + "T23:59:59.999Z"}
+            };
         console.log("Filters:", filters);
         const results = await datacube.dataRetrieval(process.env.MASTER_DATABASE_ID, collId, JSON.stringify(filters));
         console.log(results)
@@ -28,7 +32,40 @@ export async function getFeedbacksByDate(req, res) {
         res.status(500).json({ error: "Failed to get feedback data" });
     }
 }
+export async function updateFeedbackStatus(req, res) {
 
+    try {
+        console.log("This is the body:", req.body)
+        const qrId = req.body.qrId.toLowerCase();
+        const feedbackId = req.body.feedbackId;
+        const is_resolved = req.body.is_resolved;
+        const severity = req.body.severity;    
+        const collId = qrId.slice(0,4);
+        console.log("collId:", collId)
+        
+        const filters = {"_id": feedbackId};
+        
+        const updateData = {
+            "is_resolved": is_resolved, 
+            "dashboard_metrics.severity": severity, 
+            "last_updated": new Date().toISOString()
+        };
+        console.log("Filters:", filters);
+        const results = await datacube.dataUpdate(process.env.MASTER_DATABASE_ID, collId, filters, updateData);
+        console.log(results)
+        if (results.success) {
+            
+            res.status(200).json({ success: true, message: "Feedback status updated successfully" });
+        } else {
+            console.error("❌ Failed to update feedback status: 404");
+            res.status(404).json({ error: "Update failed" });
+        }
+
+    } catch (err) {
+        console.error("❌ Failed to update feedback status:", err);
+        res.status(500).json({ error: "Failed to update feedback status" });
+    }
+}
 export async function getQRCodeDetails(req, res) {
 
     try {

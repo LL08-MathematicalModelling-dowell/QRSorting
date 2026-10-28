@@ -76,7 +76,10 @@ class Datacubeservices {
             database_id: databaseId,
             collection_name: collectionName,
             filters: filters,
-            update_data: updateData
+            update_data: updateData,
+            update_all_fields: true,
+            update_many: false,
+            upsert: true
         };
         try {
             const response = await axios.put(url, payload, { headers: this.headers });
