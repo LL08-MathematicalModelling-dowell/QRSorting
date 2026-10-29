@@ -156,7 +156,8 @@ const RoomOverviewDashboard = () => {
       .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
-  const displayName = formatClientName(clientName);
+  // const displayName = formatClientName(clientName);
+  const displayName = 'DOWELL HOTEL & RESORTS';
 
   useEffect(() => {
     const fetchRoomsData = async () => {
