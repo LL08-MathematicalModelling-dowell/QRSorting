@@ -57,10 +57,10 @@ const RoomCard = ({ room, clientName, onClick }) => {
         cursor-pointer
         bg-white/90
         backdrop-blur-sm
-        rounded-2xl
+        rounded-3xl
         border
         border-[#E6D5B8]/80
-        p-4
+        p-6
         shadow-[0_4px_20px_-4px_rgba(197,160,89,0.1)]
         hover:shadow-[0_10px_30px_-4px_rgba(197,160,89,0.25)]
         hover:border-[#C5A059]
@@ -78,61 +78,61 @@ const RoomCard = ({ room, clientName, onClick }) => {
 
       <div>
         {/* Room Header & Status Badges Placed Below Name */}
-        <div className="mb-3">
-          <span className="text-[10px] font-bold text-[#A89F91] uppercase tracking-widest block mb-0.5">
+        <div className="mb-4">
+          <span className="text-[11px] font-bold text-[#A89F91] uppercase tracking-widest block mb-1">
             Room / Area
           </span>
-          <h2 className="text-lg font-black text-[#2C2A29] group-hover:text-[#C5A059] transition-colors duration-200 mb-2">
+          <h2 className="text-xl font-black text-[#2C2A29] group-hover:text-[#C5A059] transition-colors duration-200 mb-3">
             {room.room_number}
           </h2>
 
           {/* Metric Badges Row */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-bold flex items-center gap-1 shadow-xs">
-              <CheckCircle2 className="w-2.5 h-2.5" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold flex items-center gap-1 shadow-xs">
+              <CheckCircle2 className="w-3 h-3" />
               {stats.resolved} Resolved
             </span>
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 shadow-xs ${
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-xs ${
               stats.pending > 0 
                 ? 'bg-red-50 border border-red-200 text-red-600' 
                 : 'bg-gray-50 border border-gray-200 text-gray-500'
             }`}>
-              <AlertCircle className="w-2.5 h-2.5 text-red-500" />
+              <AlertCircle className="w-3 h-3 text-red-500" />
               {stats.pending} Pending
             </span>
           </div>
         </div>
 
         {/* QR Name */}
-        <div className="mb-4 bg-[#FAF7F2] rounded-xl p-2.5 border border-[#F0E6D8]">
-          <span className="text-[9px] font-bold text-[#A89F91] uppercase tracking-wider block mb-0.5">
+        <div className="mb-6 bg-[#FAF7F2] rounded-2xl p-3.5 border border-[#F0E6D8]">
+          <span className="text-[10px] font-bold text-[#A89F91] uppercase tracking-wider block mb-0.5">
             QR Identifier
           </span>
-          <p className="text-xs font-bold text-[#4A453F] truncate">
+          <p className="text-sm font-bold text-[#4A453F] truncate">
             {room.name}
           </p>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="pt-3 border-t border-[#F0E6D8] flex items-center justify-between">
-        <span className="text-[10px] font-semibold text-[#8C7A6B]">
+      <div className="pt-4 border-t border-[#F0E6D8] flex items-center justify-between">
+        <span className="text-xs font-semibold text-[#8C7A6B]">
           QR #{room.sequence_number} ({stats.total} total)
         </span>
 
         <span className="
-          text-[10px]
+          text-xs
           font-bold
           text-[#C5A059]
           flex
           items-center
-          gap-1
-          group-hover:translate-x-1
+          gap-1.5
+          group-hover:translate-x-1.5
           transition-transform
           duration-200
         ">
           View Report
-          <ArrowRight className="w-3 h-3 text-[#C5A059]" />
+          <ArrowRight className="w-3.5 h-3.5 text-[#C5A059]" />
         </span>
       </div>
     </div>
@@ -181,7 +181,7 @@ const RoomOverviewDashboard = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-6 font-sans flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-8 font-sans flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#C5A059] border-t-transparent mb-4"></div>
           <p className="text-[#8C7A6B] font-medium tracking-wide">
@@ -194,8 +194,8 @@ const RoomOverviewDashboard = () => {
 
   if (error) {
     return (
-      <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-6 font-sans flex items-center justify-center">
-        <div className="bg-white/80 backdrop-blur-md border border-[#E6D5B8] rounded-2xl p-6 text-center max-w-md shadow-xl">
+      <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-8 font-sans flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-md border border-[#E6D5B8] rounded-2xl p-8 text-center max-w-md shadow-xl">
           <p className="text-[#A35C48] font-semibold tracking-wide">
             {error}
           </p>
@@ -205,69 +205,65 @@ const RoomOverviewDashboard = () => {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] px-6 py-4 font-sans flex flex-col justify-between">
-      <div className="max-w-7xl mx-auto w-full flex flex-col h-full justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-[#FDFBF7] via-[#F9F6EE] to-[#F4EFE6] p-6 sm:p-8 font-sans flex flex-col justify-between">
+      <div className="max-w-7xl mx-auto w-full">
 
         {/* Header */}
-        <div>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-[#E6D5B8]/60 pb-3 mb-4 gap-2">
-            <div>
-              <div className="flex items-center gap-2 text-[#C5A059] font-bold text-[10px] uppercase tracking-widest mb-1">
-                <Crown className="w-3.5 h-3.5 text-[#C5A059]" />
-                {displayName}
-              </div>
-
-              {/* Custom Styled Title with Elegant Font and Gradient Color */}
-              <h1 className="text-2xl lg:text-3xl font-serif font-bold bg-gradient-to-r from-[#2C2A29] via-[#7D756D] to-[#C5A059] bg-clip-text text-transparent tracking-wide">
-                Guest Experience Dashboard
-              </h1>
-
-              <p className="text-xs text-[#7D756D] mt-0.5 font-medium">
-                Select a location to review real-time guest sentiment and feedback
-              </p>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-[#E6D5B8]/60 pb-6 mb-8 gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-[#C5A059] font-bold text-xs uppercase tracking-widest mb-2">
+              <Crown className="w-4 h-4 text-[#C5A059]" />
+              {displayName}
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-[#E6D5B8] px-3 py-1.5 rounded-xl shadow-sm text-xs font-semibold text-[#8C7A6B]">
-                <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>Active Terminals: {roomsData.length}</span>
-              </div>
+            {/* Custom Styled Title with Elegant Font and Gradient Color */}
+            <h1 className="text-3xl lg:text-4xl font-serif font-bold bg-gradient-to-r from-[#2C2A29] via-[#7D756D] to-[#C5A059] bg-clip-text text-transparent tracking-wide">
+              Guest Experience Dashboard
+            </h1>
+
+            <p className="text-sm text-[#7D756D] mt-1.5 font-medium">
+              Select a location to review real-time guest sentiment and feedback
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-[#E6D5B8] px-4 py-2.5 rounded-2xl shadow-sm text-xs font-semibold text-[#8C7A6B]">
+              <Sparkles className="w-4 h-4 text-[#C5A059]" />
+              <span>Active Terminals: {roomsData.length}</span>
             </div>
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col justify-center my-auto">
-          {/* No QR codes */}
-          {roomsData.length === 0 ? (
-            <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-[#E6D5B8] p-8 text-center shadow-sm">
-              <p className="text-[#8C7A6B] font-medium text-sm">
-                No QR codes found for this client.
-              </p>
-            </div>
-          ) : (
-            /* QR Code Cards Grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {roomsData.map((room) => (
-                <RoomCard
-                  key={room._id}
-                  room={room}
-                  clientName={clientName}
-                  onClick={handleCardClick}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* No QR codes */}
+        {roomsData.length === 0 ? (
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-[#E6D5B8] p-12 text-center shadow-sm">
+            <p className="text-[#8C7A6B] font-medium">
+              No QR codes found for this client.
+            </p>
+          </div>
+        ) : (
 
-        {/* Footer Watermark */}
-        <footer className="pt-2 text-right border-t border-[#E6D5B8]/40">
-          <span className="text-[9px] text-[#A89F91] font-medium tracking-wide">
-            Voice Feedback Live @ DoWell Research
-          </span>
-        </footer>
+          /* QR Code Cards Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            {roomsData.map((room) => (
+              <RoomCard
+                key={room._id}
+                room={room}
+                clientName={clientName}
+                onClick={handleCardClick}
+              />
+            ))}
+          </div>
+        )}
 
       </div>
+      
+      {/* FOOTER WATERMARK */}
+      <footer className="max-w-7xl mx-auto w-full mt-auto pt-6 text-right border-t border-[#E6D5B8]/40">
+        <span className="text-[10px] text-[#A89F91] font-medium tracking-wide">
+          Voice Feedback Live @ DoWell Research
+        </span>
+      </footer>
     </div>
   );
 };

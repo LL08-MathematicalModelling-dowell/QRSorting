@@ -287,7 +287,8 @@ const ReportDashboard = () => {
       .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
-  const displayName = formatClientName(clientName);
+  // const displayName = formatClientName(clientName);
+  const displayName = 'DOWELL HOTEL & RESORTS';
 
   const getFilteredByTimeRange = (list) => {
     const now = new Date().getTime();
